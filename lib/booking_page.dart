@@ -16,24 +16,16 @@ class BookingPage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: const [
-          TherapistCard(
-            name: 'Mariam Musa',
-            specialty: 'Cognitive Behavioral Therapy',
-            compatibilityScore: 87,
-            imageUrl: 'assets/mariam.jpg', // Placeholder for image
-          ),
-          TherapistCard(
-            name: 'Jonathan Moore',
-            specialty: 'Psychodynamic Therapy',
-            compatibilityScore: 72,
-            imageUrl: 'assets/jonathan.jpg', // Placeholder for image
-          ),
-          TherapistCard(
-            name: 'Jenelle Davinport',
-            specialty: 'Dialectical Behavior Therapy',
-            compatibilityScore: 65,
-            imageUrl: 'assets/jenelle.jpg', // Placeholder for image
+        children: [
+          // TODO: Load therapists from backend
+          const Center(
+            child: Text(
+              'No therapists available',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
           ),
         ],
       ),

@@ -37,20 +37,15 @@ class TherapistHomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10.0),
-            const UpcomingSessionCard(
-              clientName: 'Sarah Miller',
-              time: '10:00 AM - 11:00 AM',
-              imageUrl: 'assets/sarah.jpg', // Placeholder image
-            ),
-            const UpcomingSessionCard(
-              clientName: 'David Lee',
-              time: '11:30 AM - 12:30 PM',
-              imageUrl: 'assets/david.jpg', // Placeholder image
-            ),
-            const UpcomingSessionCard(
-              clientName: 'Emily Chen',
-              time: '1:00 PM - 2:00 PM',
-              imageUrl: 'assets/emily.jpg', // Placeholder image
+            // TODO: Load upcoming sessions from backend
+            const Center(
+              child: Text(
+                'No upcoming sessions',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
             ),
             const SizedBox(height: 20.0),
 
@@ -63,20 +58,15 @@ class TherapistHomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10.0),
-            const ClientInteractionCard(
-              clientName: 'Sarah Miller',
-              lastContacted: '2 days ago',
-              imageUrl: 'assets/sarah.jpg', // Placeholder image
-            ),
-            const ClientInteractionCard(
-              clientName: 'David Lee',
-              lastContacted: '1 day ago',
-              imageUrl: 'assets/david.jpg', // Placeholder image
-            ),
-            const ClientInteractionCard(
-              clientName: 'Emily Chen',
-              lastContacted: '3 days ago',
-              imageUrl: 'assets/emily.jpg', // Placeholder image
+            // TODO: Load client interactions from backend
+            const Center(
+              child: Text(
+                'No recent client interactions',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
             ),
             const SizedBox(height: 20.0),
 

@@ -40,7 +40,7 @@ class SettingsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'Jackson',
+                          'User',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -48,7 +48,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         SizedBox(height: 4.0),
                         Text(
-                          'jackson69@gmail.com',
+                          'user@example.com',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey,

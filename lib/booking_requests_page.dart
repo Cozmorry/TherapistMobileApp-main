@@ -21,18 +21,16 @@ class BookingRequestsPage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: const [
-          BookingRequestCard(
-            clientName: 'Jackson',
-            date: 'May 22, 2025',
-            time: '14:00',
-            imageUrl: 'assets/jackson.jpg',
-          ),
-          BookingRequestCard(
-            clientName: 'Anastasia',
-            date: 'May 23, 2025',
-            time: '10:00',
-            imageUrl: 'assets/anastasia.jpg',
+        children: [
+          // TODO: Load booking requests from backend
+          const Center(
+            child: Text(
+              'No booking requests',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
           ),
         ],
       ),

@@ -15,18 +15,16 @@ class SessionsPage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: const [
-          SessionCard(
-            therapistName: 'Mariam Musa',
-            date: 'May 22, 2025',
-            time: '14:00',
-            imageUrl: 'assets/mariam.jpg', // Placeholder for image
-          ),
-          SessionCard(
-            therapistName: 'Jenelle Davinport',
-            date: 'May 25, 2025',
-            time: '9:00',
-            imageUrl: 'assets/jenelle.jpg', // Placeholder for image
+        children: [
+          // TODO: Load sessions from backend
+          const Center(
+            child: Text(
+              'No sessions scheduled',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
           ),
         ],
       ),

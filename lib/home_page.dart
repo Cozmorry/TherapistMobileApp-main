@@ -61,7 +61,7 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 20),
               const SizedBox(height: 20),
               const Text(
-                'Welcome, Sarah',
+                'Welcome',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
