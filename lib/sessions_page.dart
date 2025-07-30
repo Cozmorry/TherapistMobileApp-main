@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/services/firebase_service.dart';
-import 'package:provider/provider.dart';
-import 'package:therapair/providers/auth_provider.dart';
 
 class SessionsPage extends StatefulWidget {
   const SessionsPage({super.key});
@@ -11,48 +8,23 @@ class SessionsPage extends StatefulWidget {
 }
 
 class _SessionsPageState extends State<SessionsPage> {
-  List<Map<String, dynamic>> _sessions = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSessions();
-  }
-
-  Future<void> _loadSessions() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userProfile = await FirebaseService.getCurrentUserProfile();
-      
-      if (userProfile != null) {
-        final sessions = await FirebaseService.getUserSessions(
-          authProvider.user!.uid,
-          userProfile['role'] ?? 'client',
-        );
-        setState(() {
-          _sessions = sessions;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load sessions: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  final List<Map<String, dynamic>> _sessions = [
+    {
+      'therapistName': 'Dr. Sarah Johnson',
+      'date': 'March 15, 2024',
+      'time': '2:00 PM',
+    },
+    {
+      'therapistName': 'Dr. Michael Chen',
+      'date': 'March 18, 2024',
+      'time': '10:00 AM',
+    },
+    {
+      'therapistName': 'Dr. Emily Rodriguez',
+      'date': 'March 22, 2024',
+      'time': '3:30 PM',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -67,13 +39,7 @@ class _SessionsPageState extends State<SessionsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFE91E63),
-              ),
-            )
-          else if (_sessions.isEmpty)
+          if (_sessions.isEmpty)
             const Center(
               child: Text(
                 'No sessions scheduled',
@@ -124,7 +90,8 @@ class SessionCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundImage: AssetImage(imageUrl), // Use AssetImage for local images
+              backgroundColor: Colors.grey[300],
+              child: Icon(Icons.person, size: 40, color: Colors.grey[600]),
             ),
             const SizedBox(width: 16.0),
             Column(

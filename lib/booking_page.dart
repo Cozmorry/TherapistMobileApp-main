@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/session_schedule_page.dart';
-import 'package:therapair/services/firebase_service.dart';
 
 class BookingPage extends StatefulWidget {
   const BookingPage({super.key});
@@ -10,52 +9,23 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
-  List<Map<String, dynamic>> _therapists = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTherapists();
-  }
-
-  Future<void> _loadTherapists() async {
-    try {
-      final userProfile = await FirebaseService.getCurrentUserProfile();
-      
-      // Get all therapists
-      final allTherapists = await FirebaseService.getTherapists();
-      
-      // Filter therapists based on client preferences
-      List<Map<String, dynamic>> filteredTherapists = allTherapists;
-      
-      if (userProfile != null && userProfile['therapyNeeds'] != null) {
-        // Filter by therapy needs (specialties)
-        filteredTherapists = allTherapists.where((therapist) {
-          final specialties = therapist['specialties']?.toString().toLowerCase() ?? '';
-          final therapyNeeds = userProfile['therapyNeeds'].toString().toLowerCase();
-          return specialties.contains(therapyNeeds) || specialties.contains('general');
-        }).toList();
-      }
-      
-      setState(() {
-        _therapists = filteredTherapists;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load therapists: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  final List<Map<String, dynamic>> _therapists = [
+    {
+      'name': 'Dr. Sarah Johnson',
+      'specialty': 'Cognitive Behavioral Therapy (CBT)',
+      'compatibilityScore': 95,
+    },
+    {
+      'name': 'Dr. Michael Chen',
+      'specialty': 'Anxiety and Stress Management',
+      'compatibilityScore': 88,
+    },
+    {
+      'name': 'Dr. Emily Rodriguez',
+      'specialty': 'Depression and Mood Disorders',
+      'compatibilityScore': 92,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -70,13 +40,7 @@ class _BookingPageState extends State<BookingPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFE91E63),
-              ),
-            )
-          else if (_therapists.isEmpty)
+          if (_therapists.isEmpty)
             const Center(
               child: Text(
                 'No therapists available',
@@ -88,9 +52,9 @@ class _BookingPageState extends State<BookingPage> {
             )
           else
             ..._therapists.map((therapist) => TherapistCard(
-              name: therapist['username'] ?? 'Unknown',
-              specialty: therapist['specialties'] ?? 'General Therapy',
-              compatibilityScore: 85, // Default compatibility score
+              name: therapist['name'] ?? 'Unknown',
+              specialty: therapist['specialty'] ?? 'General Therapy',
+              compatibilityScore: therapist['compatibilityScore'] ?? 85,
               imageUrl: 'assets/images/therapist_placeholder.png', // Default image
             )),
         ],
@@ -127,7 +91,8 @@ class TherapistCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundImage: AssetImage(imageUrl), // Use AssetImage for local images
+              backgroundColor: Colors.grey[300],
+              child: Icon(Icons.person, size: 40, color: Colors.grey[600]),
             ),
             const SizedBox(width: 16.0),
             Expanded(
@@ -176,7 +141,6 @@ class TherapistCard extends StatelessWidget {
                 ],
               ),
             ),
-            // TODO: Add star icon and rating if needed
           ],
         ),
       ),

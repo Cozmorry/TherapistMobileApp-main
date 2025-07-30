@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'booking_page.dart'; // Import the booking page
-import 'settings_page.dart'; // Import the settings page
-import 'package:provider/provider.dart';
-import 'package:therapair/providers/auth_provider.dart';
-import 'package:therapair/services/firebase_service.dart';
-// Import the sessions page
-// Import the resources page
+import 'package:therapair/booking_page.dart';
+import 'package:therapair/sessions_page.dart';
+import 'package:therapair/resources_page.dart';
+import 'package:therapair/settings_page.dart';
+import 'package:therapair/services/local_storage_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,8 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String _username = 'User';
-  bool _isLoading = true;
-  bool _onboardingCompleted = false;
 
   @override
   void initState() {
@@ -25,194 +21,182 @@ class _HomePageState extends State<HomePage> {
     _loadUserData();
   }
 
-  Future<void> _loadUserData() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userProfile = await FirebaseService.getCurrentUserProfile();
-      
-      if (userProfile != null) {
-        setState(() {
-          _username = userProfile['username'] ?? 'User';
-          _onboardingCompleted = userProfile['onboardingCompleted'] ?? false;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  void _loadUserData() {
+    setState(() {
+      _username = LocalStorageService.getUserDisplayName();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[100],
-      appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+      backgroundColor: const Color(0xFFFCE4EC),
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Find Therapists Button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const BookingPage()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE91E63),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
-                child: const Text(
-                  'Find Therapists',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const SizedBox(height: 20),
-              Text(
-                'Welcome, $_username',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (!_onboardingCompleted) ...[
-                const SizedBox(height: 15),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.orange),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Complete Your Profile',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Help us find the perfect therapist for you by completing your preferences.',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/client-form');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        ),
-                        child: const Text(
-                          'Complete Profile',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              const Text(
-                'Explore the apps features and start your journey to better mental health. You can find therapists, schedule sessions, and access helpful resources.',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 30),
-              const Text(
-                'AI Companion',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
+              // Header with welcome message
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'New',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          'Chat with your AI companion',
-                          style: TextStyle(
-                            fontSize: 18,
+                        Text(
+                          'Welcome back, $_username!',
+                          style: const TextStyle(
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 4),
                         const Text(
-                          'Get support and guidance anytime, anywhere.',
+                          'How are you feeling today?',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
+                            fontSize: 16,
+                            color: Colors.black54,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 100,
-                    height: 100,
-                    color: Colors.grey[300], // Placeholder for the image
-                    // TODO: Add the image here
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: const Color(0xFFE91E63),
+                    child: Text(
+                      _username.isNotEmpty ? _username[0].toUpperCase() : 'U',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 30),
+
+              // Quick Actions Section
+              const Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 15),
+              
+              // Action Cards
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  children: [
+                    _buildActionCard(
+                      'Book Session',
+                      Icons.calendar_today,
+                      const Color(0xFFE91E63),
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BookingPage(),
+                        ),
+                      ),
+                    ),
+                    _buildActionCard(
+                      'My Sessions',
+                      Icons.event_note,
+                      const Color(0xFF9C27B0),
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SessionsPage(),
+                        ),
+                      ),
+                    ),
+                    _buildActionCard(
+                      'Resources',
+                      Icons.library_books,
+                      const Color(0xFF2196F3),
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ResourcesPage(),
+                        ),
+                      ),
+                    ),
+                    _buildActionCard(
+                      'Settings',
+                      Icons.settings,
+                      const Color(0xFF4CAF50),
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
-      // Remove bottom navigation as it will be handled by MainLayout
+    );
+  }
+
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
