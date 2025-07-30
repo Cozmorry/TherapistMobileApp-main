@@ -21,7 +21,7 @@ class AuthProvider extends ChangeNotifier {
     FirebaseService.authStateChanges.listen((User? user) {
       _user = user;
       if (user != null) {
-        _loadUserProfile();
+        loadUserProfile();
       } else {
         _userProfile = null;
       }
@@ -29,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> _loadUserProfile() async {
+  Future<void> loadUserProfile() async {
     if (_user != null) {
       try {
         _userProfile = await FirebaseService.getUserProfile(_user!.uid);
@@ -45,7 +45,6 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String username,
     required String role,
-    String? medicalHistory,
     String? specialties,
   }) async {
     _setLoading(true);
@@ -55,9 +54,10 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         username: username,
         role: role,
-        medicalHistory: medicalHistory,
         specialties: specialties,
       );
+      // Reload user profile after successful signup
+      await loadUserProfile();
     } catch (e) {
       _setLoading(false);
       rethrow;
@@ -75,6 +75,8 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
+      // Reload user profile after successful signin
+      await loadUserProfile();
     } catch (e) {
       _setLoading(false);
       rethrow;
@@ -97,6 +99,8 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       await FirebaseService.signInWithGoogle();
+      // Reload user profile after successful Google signin
+      await loadUserProfile();
     } catch (e) {
       _setLoading(false);
       rethrow;

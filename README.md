@@ -14,16 +14,31 @@ This is the initial screen users see when launching the application. It displays
 - The `TheraPair` logo (represented by a heart icon with two person icons).
 - The application name: "TheraPair".
 - A tagline: "Tailoring therapy to your needs".
-- A "Get Started" button that navigates to the `SelectRolePage`.
+- A "Get Started" button that navigates to the `LoginPage`.
 
-### 2. Select Role Page (`lib/select_role_page.dart`)
-This page allows users to choose their role within the application. It features:
-- A title: "Select Your Role".
-- Two main buttons:
-    - "Client": Navigates to the `ClientRegistrationPage`.
-    - "Therapist": Navigates to the `TherapistRegistrationPage`.
+### 2. Login Page (`lib/login_page.dart`)
+This page allows users to sign in to their account. It features:
+- Email and password input fields
+- "Sign In" button
+- Google Sign-In button
+- "Sign Up" link that navigates to Signup Page
 
-### 3. Client Registration Page (`lib/client_registration_page.dart`)
+### 3. Signup Page (`lib/signup_page.dart`)
+This page allows users to choose their registration type. It features:
+- Two registration cards:
+    - "I'm a Client": Navigates to Client Registration
+    - "I'm a Therapist": Navigates to Therapist Registration
+- Clean card-based interface with icons
+
+### 4. Role Selection Page (`lib/role_selection_page.dart`)
+This page appears after successful registration to choose user role. It features:
+- Welcome message
+- Two role cards:
+    - "I'm a Client": For users seeking therapy
+    - "I'm a Therapist": For users providing therapy
+- Continue button to proceed with role selection
+
+### 5. Client Registration Page (`lib/client_registration_page.dart`)
 This page is for new clients to register their account. It includes:
 - A "Register" title.
 - Input fields for:
@@ -34,7 +49,7 @@ This page is for new clients to register their account. It includes:
 - A "Register" button.
 - A "Already have an account? Log In" section with a clickable "Log In" text.
 
-### 4. Therapist Registration Page (`lib/therapist_registration_page.dart`)
+### 6. Therapist Registration Page (`lib/therapist_registration_page.dart`)
 This page is for therapists to register their account. It includes:
 - A "Register" title.
 - Input fields for:

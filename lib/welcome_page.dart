@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/select_role_page.dart'; // Import your SelectRolePage
+import 'package:therapair/login_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -63,7 +63,9 @@ class WelcomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SelectRolePage()),
+                  MaterialPageRoute(
+                    builder: (context) => const LoginPage(),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

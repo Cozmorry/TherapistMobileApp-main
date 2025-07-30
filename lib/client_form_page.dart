@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/booking_page.dart';
 import 'package:provider/provider.dart';
 import 'package:therapair/providers/auth_provider.dart';
 import 'package:therapair/services/firebase_service.dart';
+import 'package:therapair/widgets/main_layout.dart';
 
 class ClientFormPage extends StatefulWidget {
   const ClientFormPage({super.key});
@@ -15,6 +15,7 @@ class _ClientFormPageState extends State<ClientFormPage> {
   String? selectedApproach;
   String? selectedCommunicationStyle;
   String? selectedTherapyNeeds;
+  final TextEditingController _medicalHistoryController = TextEditingController();
 
   final List<String> therapeuticApproaches = [
     'Cognitive Behavioral Therapy (CBT)',
@@ -195,9 +196,38 @@ class _ClientFormPageState extends State<ClientFormPage> {
                 },
               ),
             ),
+            const SizedBox(height: 30),
+
+            // Medical History Section
+            const Text(
+              'Relevant Medical History (Optional)',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: TextField(
+                controller: _medicalHistoryController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  hintText: 'Please share any relevant medical history, medications, or conditions that might be important for therapy...',
+                  hintStyle: TextStyle(color: Colors.grey),
+                ),
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
             const SizedBox(height: 50),
 
-                         // Find My Therapist Button
+            // Find My Therapist Button
              ElevatedButton(
                onPressed: () async {
                  // Save client preferences to Firestore
@@ -208,15 +238,18 @@ class _ClientFormPageState extends State<ClientFormPage> {
                        'therapeuticApproach': selectedApproach,
                        'communicationStyle': selectedCommunicationStyle,
                        'therapyNeeds': selectedTherapyNeeds,
+                       'medicalHistory': _medicalHistoryController.text.trim().isEmpty 
+                           ? null 
+                           : _medicalHistoryController.text.trim(),
                        'onboardingCompleted': true,
                      });
                    }
                    
-                   // Navigate to booking page with preferences
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(builder: (context) => const BookingPage()),
-                   );
+                                       // Navigate to client dashboard
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MainLayout(isTherapist: false)),
+                    );
                  } catch (e) {
                    ScaffoldMessenger.of(context).showSnackBar(
                      SnackBar(
@@ -234,18 +267,24 @@ class _ClientFormPageState extends State<ClientFormPage> {
                 ),
                 elevation: 5,
               ),
-              child: const Text(
-                'Find My Therapist',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                             child: const Text(
+                 'Done',
+                 style: TextStyle(
+                   fontSize: 20,
+                   color: Colors.white,
+                   fontWeight: FontWeight.bold,
+                 ),
+               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _medicalHistoryController.dispose();
+    super.dispose();
   }
 } 

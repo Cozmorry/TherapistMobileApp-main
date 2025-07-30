@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -16,7 +17,6 @@ class FirebaseService {
     required String password,
     required String username,
     required String role,
-    String? medicalHistory,
     String? specialties,
   }) async {
     try {
@@ -31,7 +31,7 @@ class FirebaseService {
         'email': email,
         'role': role,
         'createdAt': FieldValue.serverTimestamp(),
-        if (medicalHistory != null) 'medicalHistory': medicalHistory,
+        'onboardingCompleted': role == 'therapist', // Only therapists skip onboarding
         if (specialties != null) 'specialties': specialties,
       });
 
@@ -61,9 +61,49 @@ class FirebaseService {
     await _auth.signOut();
   }
 
-  // Google Sign In method (temporarily disabled - API changes in v7)
+  // Google Sign In method
   static Future<UserCredential> signInWithGoogle() async {
-    throw Exception('Google Sign In is temporarily disabled due to API changes in google_sign_in v7. Please use email/password login for now.');
+    try {
+      // Create GoogleSignIn instance
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Google Sign In was cancelled');
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the credential
+      final userCredential = await _auth.signInWithCredential(credential);
+      
+      // Check if user profile exists in Firestore
+      final userDoc = await _firestore.collection('users').doc(userCredential.user!.uid).get();
+      
+      if (!userDoc.exists) {
+        // For new Google users, don't set role initially
+        // Role will be set in the role selection page
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'username': userCredential.user!.displayName ?? 'User',
+          'email': userCredential.user!.email,
+          'createdAt': FieldValue.serverTimestamp(),
+          // Role and onboardingCompleted will be set in role selection
+        });
+      }
+
+      return userCredential;
+    } catch (e) {
+      throw Exception('Google Sign In failed: $e');
+    }
   }
 
   // Get user profile

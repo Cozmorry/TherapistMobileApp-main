@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:therapair/providers/auth_provider.dart';
 import 'package:therapair/widgets/google_sign_in_button.dart';
+import 'package:therapair/role_selection_page.dart';
 
 class TherapistRegistrationPage extends StatefulWidget {
   const TherapistRegistrationPage({super.key});
@@ -80,12 +81,18 @@ class _TherapistRegistrationPageState extends State<TherapistRegistrationPage> {
                         ? null 
                         : _specialtiesController.text.trim(),
                   );
-                  // Registration successful - user will be automatically logged in
-                  // and redirected by the AuthWrapper in main.dart
+                  // Registration successful - navigate to role selection
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Registration successful!'),
                       backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Navigate to role selection page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RoleSelectionPage(),
                     ),
                   );
                 } catch (e) {

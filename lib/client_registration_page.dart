@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:therapair/providers/auth_provider.dart';
 // Import the client form page
 import 'package:therapair/widgets/google_sign_in_button.dart';
+import 'package:therapair/role_selection_page.dart';
 
 class ClientRegistrationPage extends StatefulWidget {
   const ClientRegistrationPage({super.key});
@@ -15,7 +16,6 @@ class _ClientRegistrationPageState extends State<ClientRegistrationPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _medicalHistoryController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +51,6 @@ class _ClientRegistrationPageState extends State<ClientRegistrationPage> {
             _buildTextField('Email', controller: _emailController),
             const SizedBox(height: 20.0),
             _buildTextField('Password', obscureText: true, controller: _passwordController),
-            const SizedBox(height: 20.0),
-            _buildTextField('Relevant Medical History (Optional)', maxLines: 3, controller: _medicalHistoryController), // For multi-line input
             const SizedBox(height: 40.0),
             ElevatedButton(
               onPressed: () async {
@@ -77,16 +75,19 @@ class _ClientRegistrationPageState extends State<ClientRegistrationPage> {
                     password: _passwordController.text,
                     username: _usernameController.text.trim(),
                     role: 'client',
-                    medicalHistory: _medicalHistoryController.text.trim().isEmpty 
-                        ? null 
-                        : _medicalHistoryController.text.trim(),
                   );
-                  // Registration successful - user will be automatically logged in
-                  // and redirected by the AuthWrapper in main.dart
+                  // Registration successful - navigate to role selection
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Registration successful!'),
                       backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Navigate to role selection page
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RoleSelectionPage(),
                     ),
                   );
                 } catch (e) {
@@ -214,7 +215,6 @@ class _ClientRegistrationPageState extends State<ClientRegistrationPage> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _medicalHistoryController.dispose();
     super.dispose();
   }
 }

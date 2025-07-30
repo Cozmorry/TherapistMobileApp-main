@@ -55,8 +55,9 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (authProvider.isAuthenticated) {
-          // User is logged in, navigate to main layout based on role
-          return MainLayout(isTherapist: authProvider.userRole == 'therapist');
+          // User is logged in, navigate to main layout
+          // MainLayout will handle role checking and onboarding
+          return const MainLayout(isTherapist: false);
         }
 
         // User is not logged in, show welcome page

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:therapair/providers/auth_provider.dart';
 import 'package:therapair/widgets/google_sign_in_button.dart';
+import 'package:therapair/signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -138,6 +139,8 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () async {
                       try {
                         await authProvider.signInWithGoogle();
+                        // Navigation will be handled by AuthWrapper in main.dart
+                        // No need to navigate manually here
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -161,7 +164,12 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/select-role');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignupPage(),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Sign Up',
@@ -180,6 +188,8 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+
 
   @override
   void dispose() {
