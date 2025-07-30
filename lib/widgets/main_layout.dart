@@ -11,7 +11,7 @@ import 'package:therapair/therapist_home_page.dart';
 import 'package:therapair/booking_requests_page.dart';
 import 'package:therapair/therapist_sessions_page.dart';
 import 'package:therapair/client_form_page.dart';
-import 'package:therapair/role_selection_page.dart';
+
 import 'package:therapair/welcome_page.dart';
 
 class MainLayout extends StatefulWidget {
@@ -31,7 +31,7 @@ class _MainLayoutState extends State<MainLayout> {
   late List<Widget> _pages;
   bool _isLoading = true;
   bool _showOnboarding = false;
-  bool _showRoleSelection = false;
+
 
   @override
   void initState() {
@@ -66,17 +66,6 @@ class _MainLayoutState extends State<MainLayout> {
         print('User profile: $userProfile'); // Debug log
         
         if (userProfile != null && userProfile.isNotEmpty) {
-          // Check if user has a role set
-          if (userProfile['role'] == null || userProfile['role'].toString().isEmpty) {
-            print('No role found - showing role selection'); // Debug log
-            // New Google Sign-In user without role - show role selection
-            setState(() {
-              _showRoleSelection = true;
-              _isLoading = false;
-            });
-            return;
-          }
-          
           // Check if client needs onboarding
           if (userProfile['role'] == 'client' && userProfile['onboardingCompleted'] != true) {
             print('Client needs onboarding'); // Debug log
@@ -124,9 +113,7 @@ class _MainLayoutState extends State<MainLayout> {
       );
     }
 
-    if (_showRoleSelection) {
-      return const RoleSelectionPage();
-    }
+
 
     if (_showOnboarding) {
       return const ClientFormPage();

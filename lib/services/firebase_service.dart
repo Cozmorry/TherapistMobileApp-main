@@ -58,7 +58,22 @@ class FirebaseService {
 
   // Sign out method
   static Future<void> signOut() async {
-    await _auth.signOut();
+    try {
+      print('FirebaseService: Starting sign out'); // Debug log
+      // Sign out from Google first
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut();
+      print('FirebaseService: Google sign out successful'); // Debug log
+      
+      // Then sign out from Firebase
+      await _auth.signOut();
+      print('FirebaseService: Firebase sign out successful'); // Debug log
+    } catch (e) {
+      print('FirebaseService: Sign out error: $e'); // Debug log
+      // If Google sign out fails, still sign out from Firebase
+      await _auth.signOut();
+      throw Exception('Sign out failed: $e');
+    }
   }
 
   // Google Sign In method
@@ -148,8 +163,12 @@ class FirebaseService {
   // Update user profile
   static Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     try {
-      await _firestore.collection('users').doc(uid).update(data);
+      print('FirebaseService: Updating profile for user $uid with data: $data'); // Debug log
+      // Use set with merge to handle cases where document might not exist
+      await _firestore.collection('users').doc(uid).set(data, SetOptions(merge: true));
+      print('FirebaseService: Profile updated successfully'); // Debug log
     } catch (e) {
+      print('FirebaseService: Error updating profile: $e'); // Debug log
       throw Exception('Failed to update user profile: $e');
     }
   }

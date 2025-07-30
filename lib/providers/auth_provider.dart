@@ -19,10 +19,12 @@ class AuthProvider extends ChangeNotifier {
 
   void _initAuth() {
     FirebaseService.authStateChanges.listen((User? user) {
+      print('AuthProvider: Auth state changed - user: ${user?.uid}'); // Debug log
       _user = user;
       if (user != null) {
         loadUserProfile();
       } else {
+        print('AuthProvider: User signed out, clearing profile'); // Debug log
         _userProfile = null;
       }
       notifyListeners();
@@ -32,7 +34,9 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loadUserProfile() async {
     if (_user != null) {
       try {
+        print('AuthProvider: Loading profile for user: ${_user!.uid}'); // Debug log
         _userProfile = await FirebaseService.getUserProfile(_user!.uid);
+        print('AuthProvider: Loaded profile: $_userProfile'); // Debug log
         notifyListeners();
       } catch (e) {
         print('Error loading user profile: $e');
@@ -87,8 +91,11 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     _setLoading(true);
     try {
+      print('AuthProvider: Starting sign out'); // Debug log
       await FirebaseService.signOut();
+      print('AuthProvider: Sign out successful'); // Debug log
     } catch (e) {
+      print('AuthProvider: Sign out error: $e'); // Debug log
       _setLoading(false);
       rethrow;
     }
@@ -98,10 +105,14 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signInWithGoogle() async {
     _setLoading(true);
     try {
+      print('AuthProvider: Starting Google Sign-In'); // Debug log
       await FirebaseService.signInWithGoogle();
+      print('AuthProvider: Google Sign-In successful'); // Debug log
       // Reload user profile after successful Google signin
       await loadUserProfile();
+      print('AuthProvider: Profile reloaded after Google Sign-In'); // Debug log
     } catch (e) {
+      print('AuthProvider: Google Sign-In error: $e'); // Debug log
       _setLoading(false);
       rethrow;
     }

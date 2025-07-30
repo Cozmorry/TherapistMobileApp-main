@@ -5,6 +5,7 @@ import 'package:therapair/firebase_options.dart';
 import 'package:therapair/providers/auth_provider.dart';
 import 'package:therapair/widgets/main_layout.dart';
 import 'package:therapair/welcome_page.dart'; // Import your WelcomePage
+import 'package:therapair/role_selection_page.dart'; // Import RoleSelectionPage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,14 +37,60 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isCheckingProfile = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkProfile();
+  }
+
+  Future<void> _checkProfile() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.isAuthenticated && authProvider.userProfile == null) {
+      setState(() {
+        _isCheckingProfile = true;
+      });
+      
+      // Wait for profile to be loaded
+      await authProvider.loadUserProfile();
+      
+      setState(() {
+        _isCheckingProfile = false;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-check profile when dependencies change (like auth state)
+    _checkProfile();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        if (authProvider.isLoading) {
+        print('AuthWrapper: Building with authProvider.isAuthenticated: ${authProvider.isAuthenticated}'); // Debug log
+        print('AuthWrapper: Building with authProvider.userProfile: ${authProvider.userProfile}'); // Debug log
+        print('AuthWrapper: Building with authProvider.user: ${authProvider.user?.uid}'); // Debug log
+        
+        if (authProvider.isLoading || _isCheckingProfile) {
+          print('AuthWrapper: Showing loading indicator'); // Debug log
           return const Scaffold(
             backgroundColor: Color(0xFFFCE4EC),
             body: Center(
@@ -55,11 +102,24 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (authProvider.isAuthenticated) {
-          // User is logged in, navigate to main layout
+          print('AuthWrapper: User is authenticated'); // Debug log
+          print('AuthWrapper: User profile: ${authProvider.userProfile}'); // Debug log
+          
+          // For new Google users, always show role selection first
+          if (authProvider.userProfile == null || 
+              authProvider.userProfile!.isEmpty || 
+              authProvider.userProfile!['role'] == null) {
+            print('AuthWrapper: No role found, showing role selection'); // Debug log
+            // User is authenticated but doesn't have a role, show role selection
+            return const RoleSelectionPage();
+          }
+          print('AuthWrapper: Role found, navigating to main layout'); // Debug log
+          // User is logged in and has a role, navigate to main layout
           // MainLayout will handle role checking and onboarding
           return const MainLayout(isTherapist: false);
         }
 
+        print('AuthWrapper: User not authenticated, showing welcome page'); // Debug log
         // User is not logged in, show welcome page
         return const WelcomePage();
       },

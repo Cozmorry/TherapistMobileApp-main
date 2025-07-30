@@ -110,10 +110,14 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             }),
             SettingsButton(text: 'Log Out', onPressed: () async {
+              print('SettingsPage: Logout button pressed'); // Debug log
               final authProvider = Provider.of<AuthProvider>(context, listen: false);
               try {
+                print('SettingsPage: Calling authProvider.signOut()'); // Debug log
                 await authProvider.signOut();
+                print('SettingsPage: Sign out completed successfully'); // Debug log
               } catch (e) {
+                print('SettingsPage: Sign out error: $e'); // Debug log
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Logout failed: $e'),

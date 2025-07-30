@@ -17,9 +17,21 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    print('RoleSelectionPage: initState called'); // Debug log
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('RoleSelectionPage: Building widget'); // Debug log
     return Scaffold(
       backgroundColor: const Color(0xFFFCE4EC), // Light pink background
+      appBar: AppBar(
+        title: const Text('Role Selection'),
+        backgroundColor: const Color(0xFFFCE4EC),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -71,7 +83,10 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
               ElevatedButton(
                 onPressed: selectedRole == null || _isLoading
                     ? null
-                    : () => _continueWithRole(),
+                    : () {
+                        print('Continue button pressed!'); // Debug log
+                        _continueWithRole();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE91E63),
                   padding: const EdgeInsets.symmetric(vertical: 18.0),
@@ -168,6 +183,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
   }
 
   Future<void> _continueWithRole() async {
+    print('_continueWithRole called with selectedRole: $selectedRole'); // Debug log
     if (selectedRole == null) return;
 
     setState(() {
@@ -179,11 +195,24 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
       if (authProvider.user != null) {
         // Update the user's role in Firestore
         print('Updating user profile with role: $selectedRole'); // Debug log
-        await FirebaseService.updateUserProfile(authProvider.user!.uid, {
+        print('User ID: ${authProvider.user!.uid}'); // Debug log
+        
+        final dataToUpdate = {
           'role': selectedRole,
           'onboardingCompleted': selectedRole == 'therapist', // Therapists skip onboarding
-        });
+        };
+        print('Data to update: $dataToUpdate'); // Debug log
+        
+        await FirebaseService.updateUserProfile(authProvider.user!.uid, dataToUpdate);
         print('User profile updated successfully'); // Debug log
+        
+        // Verify the role was saved by checking the profile
+        final updatedProfile = await FirebaseService.getUserProfile(authProvider.user!.uid);
+        print('Updated profile from Firestore: $updatedProfile'); // Debug log
+        
+        // Reload user profile to ensure it's updated
+        await authProvider.loadUserProfile();
+        print('User profile reloaded'); // Debug log
 
         // Navigate based on role
         print('Navigating based on role: $selectedRole'); // Debug log
@@ -198,13 +227,16 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
           );
         } else {
           print('Navigating to client onboarding'); // Debug log
-          // Navigate to client onboarding
+          print('About to navigate to ClientFormPage'); // Debug log
+          
+          // Navigate directly to ClientFormPage
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => const ClientFormPage(),
             ),
           );
+          print('Navigation to ClientFormPage completed'); // Debug log
         }
       }
     } catch (e) {
