@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/widgets/main_layout.dart';
+import 'package:therapair/therapist_home_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
 
-class ClientOnboardingPage extends StatefulWidget {
-  const ClientOnboardingPage({super.key});
+class TherapistOnboardingPage extends StatefulWidget {
+  const TherapistOnboardingPage({super.key});
 
   @override
-  State<ClientOnboardingPage> createState() => _ClientOnboardingPageState();
+  State<TherapistOnboardingPage> createState() => _TherapistOnboardingPageState();
 }
 
-class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
+class _TherapistOnboardingPageState extends State<TherapistOnboardingPage> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(); // Add username controller
+  final _usernameController = TextEditingController();
   final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _licenseController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final _bioController = TextEditingController();
   
   String _selectedGender = 'Prefer not to say';
-  String _selectedTherapyType = 'Individual Therapy';
   String _selectedTherapeuticApproach = 'Cognitive Behavioral Therapy (CBT)';
   String _selectedCommunicationStyle = 'Direct and Clear';
-  String _selectedTherapyNeeds = 'Anxiety and Stress Management';
+  String _selectedSpecialization = 'Anxiety and Stress Management';
+  String _selectedSessionType = 'Individual Therapy';
+  String _selectedExperienceLevel = '3-5 years';
   bool _isLoading = false;
 
   final List<String> _genderOptions = [
@@ -28,14 +30,6 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
     'Female',
     'Non-binary',
     'Prefer not to say',
-  ];
-
-  final List<String> _therapyTypes = [
-    'Individual Therapy',
-    'Couples Therapy',
-    'Family Therapy',
-    'Group Therapy',
-    'Online Therapy',
   ];
 
   final List<String> _therapeuticApproaches = [
@@ -62,7 +56,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
     'Educational and Informative',
   ];
 
-  final List<String> _therapyNeeds = [
+  final List<String> _specializations = [
     'Anxiety and Stress Management',
     'Depression and Mood Disorders',
     'Trauma and PTSD',
@@ -80,12 +74,29 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
     'Crisis Intervention',
   ];
 
+  final List<String> _sessionTypes = [
+    'Individual Therapy',
+    'Couples Therapy',
+    'Family Therapy',
+    'Group Therapy',
+    'Online Therapy',
+  ];
+
+  final List<String> _experienceLevels = [
+    '1-2 years',
+    '3-5 years',
+    '6-10 years',
+    '11-15 years',
+    '15+ years',
+  ];
+
   @override
   void dispose() {
-    _usernameController.dispose(); // Dispose username controller
+    _usernameController.dispose();
     _nameController.dispose();
-    _ageController.dispose();
-    _phoneController.dispose();
+    _licenseController.dispose();
+    _experienceController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -108,7 +119,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
             children: [
               // Header
               const Text(
-                'Tell us about yourself',
+                'Tell us about your practice',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -117,7 +128,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'This helps us match you with the right therapist',
+                'This helps clients find the right therapist for their needs',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.black54,
@@ -129,8 +140,8 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               TextFormField(
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Username',
-                  hintText: 'Choose a unique username',
+                  labelText: 'Professional Username',
+                  hintText: 'Choose a professional username',
                   prefixIcon: const Icon(Icons.alternate_email, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -175,14 +186,13 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               ),
               const SizedBox(height: 20),
               
-              // Age Field
+              // License Field
               TextFormField(
-                controller: _ageController,
-                keyboardType: TextInputType.number,
+                controller: _licenseController,
                 decoration: InputDecoration(
-                  labelText: 'Age',
-                  hintText: 'Enter your age',
-                  prefixIcon: const Icon(Icons.cake, color: Color(0xFFE91E63)),
+                  labelText: 'License Number',
+                  hintText: 'Enter your professional license number',
+                  prefixIcon: const Icon(Icons.verified, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
@@ -191,11 +201,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your age';
-                  }
-                  final age = int.tryParse(value);
-                  if (age == null || age < 13 || age > 120) {
-                    return 'Please enter a valid age (13-120)';
+                    return 'Please enter your license number';
                   }
                   return null;
                 },
@@ -235,34 +241,44 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               ),
               const SizedBox(height: 20),
               
-              // Phone Field
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
+              // Experience Level Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedExperienceLevel,
                 decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone, color: Color(0xFFE91E63)),
+                  labelText: 'Years of Experience',
+                  prefixIcon: const Icon(Icons.work, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
                   filled: true,
                   fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
+                items: _experienceLevels.map((String level) {
+                  return DropdownMenuItem<String>(
+                    value: level,
+                    child: Text(
+                      level,
+                      style: const TextStyle(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedExperienceLevel = newValue!;
+                  });
                 },
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFE91E63)),
               ),
               const SizedBox(height: 20),
               
-              // Therapy Type Dropdown
+              // Session Type Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedTherapyType,
+                value: _selectedSessionType,
                 decoration: InputDecoration(
-                  labelText: 'Preferred Therapy Type',
+                  labelText: 'Session Types Offered',
                   prefixIcon: const Icon(Icons.psychology, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -271,7 +287,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                items: _therapyTypes.map((String type) {
+                items: _sessionTypes.map((String type) {
                   return DropdownMenuItem<String>(
                     value: type,
                     child: Text(
@@ -283,7 +299,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedTherapyType = newValue!;
+                    _selectedSessionType = newValue!;
                   });
                 },
                 isExpanded: true,
@@ -295,7 +311,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               DropdownButtonFormField<String>(
                 value: _selectedTherapeuticApproach,
                 decoration: InputDecoration(
-                  labelText: 'Preferred Therapeutic Approach',
+                  labelText: 'Primary Therapeutic Approach',
                   prefixIcon: const Icon(Icons.healing, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -328,7 +344,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               DropdownButtonFormField<String>(
                 value: _selectedCommunicationStyle,
                 decoration: InputDecoration(
-                  labelText: 'Preferred Communication Style',
+                  labelText: 'Communication Style',
                   prefixIcon: const Icon(Icons.chat, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -357,11 +373,11 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
               ),
               const SizedBox(height: 20),
               
-              // Therapy Needs Dropdown
+              // Specialization Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedTherapyNeeds,
+                value: _selectedSpecialization,
                 decoration: InputDecoration(
-                  labelText: 'Primary Therapy Needs',
+                  labelText: 'Primary Specialization',
                   prefixIcon: const Icon(Icons.favorite, color: Color(0xFFE91E63)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -370,11 +386,11 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                items: _therapyNeeds.map((String need) {
+                items: _specializations.map((String specialization) {
                   return DropdownMenuItem<String>(
-                    value: need,
+                    value: specialization,
                     child: Text(
-                      need,
+                      specialization,
                       style: const TextStyle(fontSize: 14),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -382,11 +398,37 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedTherapyNeeds = newValue!;
+                    _selectedSpecialization = newValue!;
                   });
                 },
                 isExpanded: true,
                 icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFE91E63)),
+              ),
+              const SizedBox(height: 20),
+              
+              // Bio Field
+              TextFormField(
+                controller: _bioController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: 'Professional Bio',
+                  hintText: 'Tell clients about your approach and experience...',
+                  prefixIcon: const Icon(Icons.description, color: Color(0xFFE91E63)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your professional bio';
+                  }
+                  if (value.length < 50) {
+                    return 'Bio must be at least 50 characters';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 40),
               
@@ -439,21 +481,25 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
     });
 
     try {
-      // Save onboarding data to local storage
+      // Save therapist onboarding data to local storage
       final onboardingData = {
-        'username': _usernameController.text, // Add username to onboarding data
+        'username': _usernameController.text,
         'name': _nameController.text,
-        'age': int.parse(_ageController.text),
+        'license': _licenseController.text,
         'gender': _selectedGender,
-        'phone': _phoneController.text,
-        'therapyType': _selectedTherapyType,
+        'experienceLevel': _selectedExperienceLevel,
+        'sessionType': _selectedSessionType,
         'therapeuticApproach': _selectedTherapeuticApproach,
         'communicationStyle': _selectedCommunicationStyle,
-        'therapyNeeds': _selectedTherapyNeeds,
+        'specialization': _selectedSpecialization,
+        'bio': _bioController.text,
         'completedAt': DateTime.now().toIso8601String(),
       };
       
       await LocalStorageService.completeUserOnboarding(onboardingData);
+      
+      // Add therapist to the global therapists list for matching
+      await LocalStorageService.addTherapistToList(onboardingData);
       
       // Update user's username in the user model
       final currentUser = LocalStorageService.getCurrentUser();
@@ -466,7 +512,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const MainLayout(isTherapist: false),
+            builder: (context) => const TherapistHomePage(),
           ),
         );
       }

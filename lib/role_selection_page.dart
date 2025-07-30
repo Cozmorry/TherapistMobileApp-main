@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/client_onboarding_page.dart';
-import 'package:therapair/therapist_home_page.dart';
-import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/therapist_onboarding_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
 
 class RoleSelectionPage extends StatefulWidget {
@@ -12,177 +11,57 @@ class RoleSelectionPage extends StatefulWidget {
 }
 
 class _RoleSelectionPageState extends State<RoleSelectionPage> {
-  final AuthService _authService = AuthService();
-  bool _isLoading = false;
-
   @override
   Widget build(BuildContext context) {
+    final displayName = LocalStorageService.getUserDisplayName();
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFFCE4EC), // Light pink background
-      body: Center(
+      backgroundColor: const Color(0xFFFCE4EC),
+      body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo/Icon
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE91E63),
-                  borderRadius: BorderRadius.circular(60),
-                ),
-                child: const Icon(
-                  Icons.favorite,
-                  color: Colors.white,
-                  size: 60,
-                ),
-              ),
-              const SizedBox(height: 40),
-              
               // Welcome Text
               Text(
-                'Welcome, ${LocalStorageService.getUserDisplayName()}!',
+                'Welcome, $displayName!',
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
-              
-              // Subtitle
+              const SizedBox(height: 16),
               const Text(
-                'Please select your role to continue',
+                'How would you like to use TheraPair?',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   color: Colors.black54,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 60),
               
-              // Client Role Card
-              GestureDetector(
-                onTap: _isLoading ? null : () => _selectRole('client'),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE91E63).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Color(0xFFE91E63),
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Client',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'I\'m looking for therapy services',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+              // Client Card
+              _buildRoleCard(
+                title: 'I\'m a Client',
+                subtitle: 'Looking for therapy and support',
+                icon: Icons.person,
+                color: const Color(0xFFE91E63),
+                onTap: () => _selectRole('client'),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               
-              // Therapist Role Card
-              GestureDetector(
-                onTap: _isLoading ? null : () => _selectRole('therapist'),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE91E63).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: const Icon(
-                          Icons.psychology,
-                          color: Color(0xFFE91E63),
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Therapist',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'I provide therapy services',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+              // Therapist Card
+              _buildRoleCard(
+                title: 'I\'m a Therapist',
+                subtitle: 'Providing therapy and support',
+                icon: Icons.psychology,
+                color: const Color(0xFF9C27B0),
+                onTap: () => _selectRole('therapist'),
               ),
-              
-              if (_isLoading) ...[
-                const SizedBox(height: 30),
-                const CircularProgressIndicator(
-                  color: Color(0xFFE91E63),
-                ),
-              ],
             ],
           ),
         ),
@@ -190,55 +69,112 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     );
   }
 
-  Future<void> _selectRole(String role) async {
-    setState(() {
-      _isLoading = true;
-    });
+  Widget _buildRoleCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Future<void> _selectRole(String role) async {
+    print('RoleSelectionPage: Selecting role: $role');
+    
     try {
-      print('Role Selection: Starting role selection for $role');
-      // Save the selected role to local storage
       await LocalStorageService.updateUserRole(role);
-      print('Role Selection: Role saved successfully');
+      print('RoleSelectionPage: Role saved successfully');
       
-      if (role == 'client') {
-        // Navigate to client onboarding
-        print('Role Selection: Navigating to client onboarding');
-        if (mounted) {
+      if (mounted) {
+        if (role == 'client') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => const ClientOnboardingPage(),
             ),
           );
-        }
-      } else if (role == 'therapist') {
-        // Navigate to therapist dashboard
-        print('Role Selection: Navigating to therapist dashboard');
-        if (mounted) {
+        } else if (role == 'therapist') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const TherapistHomePage(),
+              builder: (context) => const TherapistOnboardingPage(),
             ),
           );
         }
       }
     } catch (e) {
-      print('Role Selection: Error selecting role: $e');
+      print('RoleSelectionPage: Error saving role: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error selecting role: $e'),
+            content: Text('Error saving role: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }

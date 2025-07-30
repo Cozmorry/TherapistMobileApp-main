@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'article_detail_page.dart'; // Import the article detail page
 
 class ResourcesPage extends StatelessWidget {
   const ResourcesPage({super.key});
@@ -7,11 +6,12 @@ class ResourcesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[50], // Light pink background
+      backgroundColor: const Color(0xFFFCE4EC),
       appBar: AppBar(
         title: const Text('Resources'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFE91E63),
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -22,122 +22,131 @@ class ResourcesPage extends StatelessWidget {
             // Search Bar
             TextField(
               decoration: InputDecoration(
-                hintText: 'Search resources',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search resources...',
+                prefixIcon: const Icon(Icons.search, color: Color(0xFFE91E63)),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(15.0),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               ),
             ),
-            const SizedBox(height: 20.0),
+            const SizedBox(height: 24.0),
 
             // Filter Buttons
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  FilterButton(text: 'All', onPressed: () { /* TODO: Implement filter */ }),
-                  FilterButton(text: 'Articles', onPressed: () { /* TODO: Implement filter */ }),
-                  FilterButton(text: 'Exercises', onPressed: () { /* TODO: Implement filter */ }),
-                  FilterButton(text: 'Audio', onPressed: () { /* TODO: Implement filter */ }),
+                  FilterButton(text: 'All', isSelected: true, onPressed: () {}),
+                  const SizedBox(width: 8),
+                  FilterButton(text: 'Articles', isSelected: false, onPressed: () {}),
+                  const SizedBox(width: 8),
+                  FilterButton(text: 'Exercises', isSelected: false, onPressed: () {}),
+                  const SizedBox(width: 8),
+                  FilterButton(text: 'Audio', isSelected: false, onPressed: () {}),
                 ],
               ),
             ),
-            const SizedBox(height: 20.0),
+            const SizedBox(height: 24.0),
 
-            // Featured Section
-            const Text(
-              'Featured',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10.0),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ArticleDetailPage()),
-                );
-              },
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const <Widget>[
-                            Text(
-                              'Article',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            Text(
-                              'Understanding Your Emotions',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            Text(
-                              'Learn to identify and manage your feelings effectively.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16.0),
-                      Container(
-                        width: 80,
-                        height: 80,
-                        color: Colors.grey[300], // Placeholder for image
-                        // TODO: Add image here
-                      ),
-                    ],
+            // Coming Soon Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE91E63).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: const Icon(
+                      Icons.library_books,
+                      size: 40,
+                      color: Color(0xFFE91E63),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Resources Coming Soon',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'We\'re working on bringing you helpful articles, exercises, and audio resources to support your mental health journey.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20.0),
+            const SizedBox(height: 24.0),
 
             // Categories Section
             const Text(
-              'Categories',
+              'Resource Categories',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 16.0),
             GridView.count(
               shrinkWrap: true,
               crossAxisCount: 2,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-              physics: const NeverScrollableScrollPhysics(), // Disable scrolling
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              physics: const NeverScrollableScrollPhysics(),
               children: <Widget>[
-                CategoryButton(icon: Icons.article, text: 'Articles & Guides', onPressed: () { /* TODO: Implement action */ }),
-                CategoryButton(icon: Icons.fitness_center, text: 'Exercises & Activities', onPressed: () { /* TODO: Implement action */ }),
-                CategoryButton(icon: Icons.headset, text: 'Audio & Video', onPressed: () { /* TODO: Implement action */ }),
-                CategoryButton(icon: Icons.book, text: 'Recommended Readings', onPressed: () { /* TODO: Implement action */ }),
+                CategoryButton(
+                  icon: Icons.article,
+                  text: 'Articles & Guides',
+                  color: const Color(0xFFE91E63),
+                  onPressed: () => _showComingSoon(context),
+                ),
+                CategoryButton(
+                  icon: Icons.fitness_center,
+                  text: 'Exercises & Activities',
+                  color: const Color(0xFF9C27B0),
+                  onPressed: () => _showComingSoon(context),
+                ),
+                CategoryButton(
+                  icon: Icons.headset,
+                  text: 'Audio & Video',
+                  color: const Color(0xFF2196F3),
+                  onPressed: () => _showComingSoon(context),
+                ),
+                CategoryButton(
+                  icon: Icons.book,
+                  text: 'Recommended Readings',
+                  color: const Color(0xFF4CAF50),
+                  onPressed: () => _showComingSoon(context),
+                ),
               ],
             ),
           ],
@@ -145,28 +154,48 @@ class ResourcesPage extends StatelessWidget {
       ),
     );
   }
+
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('This feature is coming soon!'),
+        backgroundColor: Color(0xFFE91E63),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 }
 
 class FilterButton extends StatelessWidget {
   final String text;
+  final bool isSelected;
   final VoidCallback onPressed;
 
-  const FilterButton({super.key, required this.text, required this.onPressed});
+  const FilterButton({
+    super.key,
+    required this.text,
+    required this.isSelected,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add spacing between buttons
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.pink[100], // Light pink button color
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          elevation: 0,
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? const Color(0xFFE91E63) : Colors.white,
+        foregroundColor: isSelected ? Colors.white : const Color(0xFFE91E63),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
         ),
-        child: Text(text, style: const TextStyle(color: Colors.black87)),
+        elevation: isSelected ? 2 : 0,
+        side: isSelected ? null : BorderSide(color: const Color(0xFFE91E63).withOpacity(0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
       ),
     );
   }
@@ -175,9 +204,16 @@ class FilterButton extends StatelessWidget {
 class CategoryButton extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color color;
   final VoidCallback onPressed;
 
-  const CategoryButton({super.key, required this.icon, required this.text, required this.onPressed});
+  const CategoryButton({
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.color,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -188,21 +224,37 @@ class CategoryButton extends StatelessWidget {
       elevation: 4,
       child: InkWell(
         onTap: onPressed,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(icon, size: 40, color: Colors.blueAccent), // Example icon color
-            const SizedBox(height: 8.0),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+        borderRadius: BorderRadius.circular(15.0),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Icon(
+                  icon,
+                  size: 30,
+                  color: color,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12.0),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
