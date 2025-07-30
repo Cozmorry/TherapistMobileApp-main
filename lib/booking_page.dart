@@ -1,8 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/session_schedule_page.dart';
+import 'package:therapair/services/firebase_service.dart';
 
-class BookingPage extends StatelessWidget {
+class BookingPage extends StatefulWidget {
   const BookingPage({super.key});
+
+  @override
+  State<BookingPage> createState() => _BookingPageState();
+}
+
+class _BookingPageState extends State<BookingPage> {
+  List<Map<String, dynamic>> _therapists = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTherapists();
+  }
+
+  Future<void> _loadTherapists() async {
+    try {
+      final userProfile = await FirebaseService.getCurrentUserProfile();
+      
+      // Get all therapists
+      final allTherapists = await FirebaseService.getTherapists();
+      
+      // Filter therapists based on client preferences
+      List<Map<String, dynamic>> filteredTherapists = allTherapists;
+      
+      if (userProfile != null && userProfile['therapyNeeds'] != null) {
+        // Filter by therapy needs (specialties)
+        filteredTherapists = allTherapists.where((therapist) {
+          final specialties = therapist['specialties']?.toString().toLowerCase() ?? '';
+          final therapyNeeds = userProfile['therapyNeeds'].toString().toLowerCase();
+          return specialties.contains(therapyNeeds) || specialties.contains('general');
+        }).toList();
+      }
+      
+      setState(() {
+        _therapists = filteredTherapists;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load therapists: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +70,29 @@ class BookingPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // TODO: Load therapists from backend
-          const Center(
-            child: Text(
-              'No therapists available',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFE91E63),
               ),
-            ),
-          ),
+            )
+          else if (_therapists.isEmpty)
+            const Center(
+              child: Text(
+                'No therapists available',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+          else
+            ..._therapists.map((therapist) => TherapistCard(
+              name: therapist['username'] ?? 'Unknown',
+              specialty: therapist['specialties'] ?? 'General Therapy',
+              compatibilityScore: 85, // Default compatibility score
+              imageUrl: 'assets/images/therapist_placeholder.png', // Default image
+            )),
         ],
       ),
     );

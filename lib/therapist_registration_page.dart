@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/login_page.dart';
-import 'package:therapair/widgets/main_layout.dart'; // Import the main layout
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
+import 'package:therapair/widgets/google_sign_in_button.dart';
 
-class TherapistRegistrationPage extends StatelessWidget {
+class TherapistRegistrationPage extends StatefulWidget {
   const TherapistRegistrationPage({super.key});
+
+  @override
+  State<TherapistRegistrationPage> createState() => _TherapistRegistrationPageState();
+}
+
+class _TherapistRegistrationPageState extends State<TherapistRegistrationPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _specialtiesController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -34,22 +45,57 @@ class TherapistRegistrationPage extends StatelessWidget {
               textAlign: TextAlign.left, // Align "Register" to left
             ),
             const SizedBox(height: 40.0),
-            _buildTextField('Username'),
+            _buildTextField('Username', controller: _usernameController),
             const SizedBox(height: 20.0),
-            _buildTextField('Email'),
+            _buildTextField('Email', controller: _emailController),
             const SizedBox(height: 20.0),
-            _buildTextField('Password', obscureText: true),
+            _buildTextField('Password', obscureText: true, controller: _passwordController),
             const SizedBox(height: 20.0),
-            _buildTextField('Indicate specialties, approaches and availability', maxLines: 5), // For multi-line input
+            _buildTextField('Indicate specialties, approaches and availability', maxLines: 5, controller: _specialtiesController), // For multi-line input
             const SizedBox(height: 40.0),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Implement therapist registration logic
-                // After successful registration, navigate to the therapist layout
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MainLayout(isTherapist: true)),
-                );
+              onPressed: () async {
+                // Validate form
+                if (_usernameController.text.isEmpty ||
+                    _emailController.text.isEmpty ||
+                    _passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all required fields'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Register with Firebase
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                try {
+                  await authProvider.signUp(
+                    email: _emailController.text.trim(),
+                    password: _passwordController.text,
+                    username: _usernameController.text.trim(),
+                    role: 'therapist',
+                    specialties: _specialtiesController.text.trim().isEmpty 
+                        ? null 
+                        : _specialtiesController.text.trim(),
+                  );
+                  // Registration successful - user will be automatically logged in
+                  // and redirected by the AuthWrapper in main.dart
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Registration successful!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Registration failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE91E63), // Pink button background
@@ -69,6 +115,46 @@ class TherapistRegistrationPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20.0),
+            // Divider
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'OR',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+              ],
+            ),
+            const SizedBox(height: 20.0),
+            // Google Sign In Button
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return GoogleSignInButton(
+                  onPressed: () async {
+                    try {
+                      await authProvider.signInWithGoogle();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Google Sign In failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  isLoading: authProvider.isLoading,
+                );
+              },
+            ),
+            const SizedBox(height: 20.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -78,12 +164,7 @@ class TherapistRegistrationPage extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => LoginPage()),
-                    );
-                    // Navigate to the login page
+                    Navigator.pushReplacementNamed(context, '/login');
                   },
                   child: const Text(
                     'Log In',
@@ -103,8 +184,13 @@ class TherapistRegistrationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String hintText, {bool obscureText = false, int? maxLines = 1}) {
+  Widget _buildTextField(String hintText, {
+    bool obscureText = false, 
+    int? maxLines = 1,
+    TextEditingController? controller,
+  }) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       maxLines: maxLines,
       decoration: InputDecoration(
@@ -120,5 +206,14 @@ class TherapistRegistrationPage extends StatelessWidget {
       ),
       style: const TextStyle(color: Colors.black),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _specialtiesController.dispose();
+    super.dispose();
   }
 }

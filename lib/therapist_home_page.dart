@@ -1,11 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/booking_requests_page.dart';
-import 'package:therapair/therapist_sessions_page.dart';
-import 'package:therapair/feedback_page.dart';
 import 'package:therapair/session_schedule_page.dart';
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
+import 'package:therapair/services/firebase_service.dart';
 
-class TherapistHomePage extends StatelessWidget {
+class TherapistHomePage extends StatefulWidget {
   const TherapistHomePage({super.key});
+
+  @override
+  State<TherapistHomePage> createState() => _TherapistHomePageState();
+}
+
+class _TherapistHomePageState extends State<TherapistHomePage> {
+  Map<String, dynamic>? _userProfile;
+  List<Map<String, dynamic>> _upcomingSessions = [];
+  List<Map<String, dynamic>> _clientInteractions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userProfile = await FirebaseService.getCurrentUserProfile();
+      
+      if (userProfile != null) {
+        final sessions = await FirebaseService.getUserSessions(
+          authProvider.user!.uid,
+          'therapist',
+        );
+        
+        setState(() {
+          _userProfile = userProfile;
+          _upcomingSessions = sessions.where((session) => 
+            session['status'] == 'scheduled' || session['status'] == 'confirmed'
+          ).toList();
+          _clientInteractions = sessions.take(3).toList(); // Show last 3 interactions
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,16 +84,41 @@ class TherapistHomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10.0),
-            // TODO: Load upcoming sessions from backend
-            const Center(
-              child: Text(
-                'No upcoming sessions',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFE91E63),
                 ),
-              ),
-            ),
+              )
+            else if (_upcomingSessions.isEmpty)
+              const Center(
+                child: Text(
+                  'No upcoming sessions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+              )
+            else
+              ..._upcomingSessions.map((session) => Card(
+                margin: const EdgeInsets.only(bottom: 8.0),
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE91E63),
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
+                  title: Text(session['clientName'] ?? 'Client'),
+                  subtitle: Text('${session['date']} at ${session['time']}'),
+                  trailing: Text(
+                    session['status'] ?? 'Scheduled',
+                    style: const TextStyle(
+                      color: Color(0xFFE91E63),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              )),
             const SizedBox(height: 20.0),
 
             // Client Interaction Section
@@ -58,16 +130,35 @@ class TherapistHomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10.0),
-            // TODO: Load client interactions from backend
-            const Center(
-              child: Text(
-                'No recent client interactions',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFE91E63),
                 ),
-              ),
-            ),
+              )
+            else if (_clientInteractions.isEmpty)
+              const Center(
+                child: Text(
+                  'No recent client interactions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+              )
+            else
+              ..._clientInteractions.map((interaction) => Card(
+                margin: const EdgeInsets.only(bottom: 8.0),
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.chat, color: Colors.white),
+                  ),
+                  title: Text(interaction['clientName'] ?? 'Client'),
+                  subtitle: Text('Last session: ${interaction['date']}'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+              )),
             const SizedBox(height: 20.0),
 
             // Quick Actions Section

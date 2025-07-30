@@ -1,8 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
 import 'package:therapair/feedback_page.dart';
+import 'package:therapair/services/firebase_service.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  Map<String, dynamic>? _userProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await FirebaseService.getCurrentUserProfile();
+      setState(() {
+        _userProfile = profile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,22 +69,29 @@ class SettingsPage extends StatelessWidget {
                     const SizedBox(width: 16.0),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'User',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      children: [
+                        if (_isLoading)
+                          const CircularProgressIndicator(
+                            color: Color(0xFFE91E63),
+                            strokeWidth: 2,
+                          )
+                        else ...[
+                          Text(
+                            _userProfile?['username'] ?? 'User',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.0),
-                        Text(
-                          'user@example.com',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
+                          const SizedBox(height: 4.0),
+                          Text(
+                            _userProfile?['email'] ?? 'user@example.com',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
@@ -71,7 +109,19 @@ class SettingsPage extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => const FeedbackPage()),
               );
             }),
-            SettingsButton(text: 'Log Out', onPressed: () { /* TODO: Implement action */ }),
+            SettingsButton(text: 'Log Out', onPressed: () async {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              try {
+                await authProvider.signOut();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Logout failed: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }),
           ],
         ),
       ),

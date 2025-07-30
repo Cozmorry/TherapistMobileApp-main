@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/booking_page.dart';
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
+import 'package:therapair/services/firebase_service.dart';
 
 class ClientFormPage extends StatefulWidget {
   const ClientFormPage({super.key});
@@ -194,15 +197,35 @@ class _ClientFormPageState extends State<ClientFormPage> {
             ),
             const SizedBox(height: 50),
 
-            // Find My Therapist Button
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to booking page with preferences
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BookingPage()),
-                );
-              },
+                         // Find My Therapist Button
+             ElevatedButton(
+               onPressed: () async {
+                 // Save client preferences to Firestore
+                 try {
+                   final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                   if (authProvider.user != null) {
+                     await FirebaseService.updateUserProfile(authProvider.user!.uid, {
+                       'therapeuticApproach': selectedApproach,
+                       'communicationStyle': selectedCommunicationStyle,
+                       'therapyNeeds': selectedTherapyNeeds,
+                       'onboardingCompleted': true,
+                     });
+                   }
+                   
+                   // Navigate to booking page with preferences
+                   Navigator.push(
+                     context,
+                     MaterialPageRoute(builder: (context) => const BookingPage()),
+                   );
+                 } catch (e) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(
+                       content: Text('Failed to save preferences: $e'),
+                       backgroundColor: Colors.red,
+                     ),
+                   );
+                 }
+               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE91E63), // Pink button
                 padding: const EdgeInsets.symmetric(vertical: 18.0),

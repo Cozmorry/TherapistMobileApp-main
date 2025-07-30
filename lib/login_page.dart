@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/widgets/main_layout.dart'; // Import the main layout
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
+import 'package:therapair/widgets/google_sign_in_button.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +36,7 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 48.0),
               TextField(
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Email',
@@ -41,6 +52,7 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 16.0),
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Password',
@@ -62,12 +74,33 @@ class LoginPage extends StatelessWidget {
                   color: Colors.blueAccent, // Example button color
                   borderRadius: BorderRadius.circular(30.0),
                   child: MaterialButton(
-                    onPressed: () {
-                      // Navigate to the main layout on login
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const MainLayout(isTherapist: false)),
-                      );
+                    onPressed: () async {
+                      // Validate form
+                      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill in all fields'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Sign in with Firebase
+                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                      try {
+                        await authProvider.signIn(
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text,
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Login failed: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     minWidth: 200.0,
                     height: 42.0,
@@ -78,10 +111,80 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 20.0),
+              // Divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                ],
+              ),
+              const SizedBox(height: 20.0),
+              // Google Sign In Button
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return GoogleSignInButton(
+                    onPressed: () async {
+                      try {
+                        await authProvider.signInWithGoogle();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Google Sign In failed: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    isLoading: authProvider.isLoading,
+                  );
+                },
+              ),
+              const SizedBox(height: 20.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text(
+                    'Don\'t have an account?',
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/select-role');
+                    },
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        color: Color(0xFFE91E63), // Pink color for "Sign Up"
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

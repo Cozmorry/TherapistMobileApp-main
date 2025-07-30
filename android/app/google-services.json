@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "339736980620",
+    "project_id": "therapair-59e99",
+    "storage_bucket": "therapair-59e99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339736980620:android:6c5d46f97d5f2f7e1d9fa9",
+        "android_client_info": {
+          "package_name": "com.cozysoftware.TheraPair"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "339736980620-rnlnsknn970indosrg84qq0bfruqiucr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cozysoftware.TheraPair",
+            "certificate_hash": "80fab335cd9d09abd3e36a12ee2a2995dd3db39e"
+          }
+        },
+        {
+          "client_id": "339736980620-996beia4c49b18qhs5kb020n1mav7c32.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSW7vUBQ9HNHoT832eriin9unzLnWowrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "339736980620-996beia4c49b18qhs5kb020n1mav7c32.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

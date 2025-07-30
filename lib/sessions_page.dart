@@ -1,7 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:therapair/services/firebase_service.dart';
+import 'package:provider/provider.dart';
+import 'package:therapair/providers/auth_provider.dart';
 
-class SessionsPage extends StatelessWidget {
+class SessionsPage extends StatefulWidget {
   const SessionsPage({super.key});
+
+  @override
+  State<SessionsPage> createState() => _SessionsPageState();
+}
+
+class _SessionsPageState extends State<SessionsPage> {
+  List<Map<String, dynamic>> _sessions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  Future<void> _loadSessions() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userProfile = await FirebaseService.getCurrentUserProfile();
+      
+      if (userProfile != null) {
+        final sessions = await FirebaseService.getUserSessions(
+          authProvider.user!.uid,
+          userProfile['role'] ?? 'client',
+        );
+        setState(() {
+          _sessions = sessions;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load sessions: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,16 +67,29 @@ class SessionsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // TODO: Load sessions from backend
-          const Center(
-            child: Text(
-              'No sessions scheduled',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFE91E63),
               ),
-            ),
-          ),
+            )
+          else if (_sessions.isEmpty)
+            const Center(
+              child: Text(
+                'No sessions scheduled',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+          else
+            ..._sessions.map((session) => SessionCard(
+              therapistName: session['therapistName'] ?? 'Unknown Therapist',
+              date: session['date'] ?? 'Unknown Date',
+              time: session['time'] ?? 'Unknown Time',
+              imageUrl: 'assets/images/therapist_placeholder.png', // Default image
+            )),
         ],
       ),
     );
