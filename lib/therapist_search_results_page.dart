@@ -446,13 +446,12 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
   }
 
   void _bookSession(Map<String, dynamic> therapist) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Booking session with ${therapist['name']}...'),
-        backgroundColor: const Color(0xFFE91E63),
-        duration: const Duration(seconds: 2),
+    Navigator.pop(context); // Close the modal first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingPage(therapist: therapist),
       ),
     );
-    // TODO: Implement actual booking functionality
   }
 } 

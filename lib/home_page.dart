@@ -164,7 +164,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             
-            // Quick Actions Grid
+            // Quick Actions Section
             const Text(
               'Quick Actions',
               style: TextStyle(
@@ -173,99 +173,214 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 16),
-            
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
+            const SizedBox(height: 12),
+            Row(
               children: [
-                _buildActionCard(
-                  'My Sessions',
-                  Icons.calendar_today,
-                  const Color(0xFF4CAF50),
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SessionsPage()),
+                Expanded(
+                  child: _buildActionCard(
+                    'Book Session',
+                    'Schedule therapy session',
+                    Icons.calendar_today,
+                    () {
+                      // Navigate to therapist search
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TherapistSearchResultsPage(),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                _buildActionCard(
-                  'Progress',
-                  Icons.trending_up,
-                  const Color(0xFF2196F3),
-                  _showProgress,
-                ),
-                _buildActionCard(
-                  'Resources',
-                  Icons.library_books,
-                  const Color(0xFFFF9800),
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ResourcesPage()),
-                  ),
-                ),
-                _buildActionCard(
-                  'Settings',
-                  Icons.settings,
-                  const Color(0xFF9C27B0),
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SettingsPage()),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    'View History',
+                    'See your past sessions',
+                    Icons.history,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SessionsPage(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    'Emergency Contact',
+                    'Get immediate support',
+                    Icons.emergency,
+                    () {
+                      _showEmergencyContact();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    'Wellness Tips',
+                    'Daily mental health tips',
+                    Icons.psychology,
+                    () {
+                      _showWellnessTips();
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Chatbot Section
+            const Text(
+              'Chatbot',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildChatbotCard(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 120, // Fixed height for consistent sizing
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: Colors.grey.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Icon(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
                 icon,
-                color: color,
-                size: 28,
+                color: const Color(0xFFE91E63),
+                size: 36,
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+              const SizedBox(height: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Expanded(
+                      child: Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatbotCard() {
+    return GestureDetector(
+      onTap: () {
+        _showChatbot();
+      },
+      child: Container(
+        width: double.infinity,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                color: const Color(0xFFE91E63),
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'TheraPair Chat',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Chat with our AI therapist',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey[400],
+                size: 14,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -285,6 +400,181 @@ class _HomePageState extends State<HomePage> {
       const SnackBar(
         content: Text('Progress tracking coming soon!'),
         backgroundColor: Color(0xFF2196F3),
+      ),
+    );
+  }
+
+  void _showEmergencyContact() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Emergency Contacts'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'If you\'re experiencing a mental health crisis, please contact:',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              _buildEmergencyContact('911', 'Emergency Services (US)', Icons.emergency, Colors.red),
+              const SizedBox(height: 8),
+              _buildEmergencyContact('999', 'Emergency Services (Kenya)', Icons.emergency, Colors.red),
+              const SizedBox(height: 8),
+              _buildEmergencyContact('116', 'Child Helpline (Kenya)', Icons.child_care, Colors.orange),
+              const SizedBox(height: 8),
+              _buildEmergencyContact('1195', 'Gender Violence Helpline (Kenya)', Icons.security, Colors.purple),
+              const SizedBox(height: 8),
+              _buildEmergencyContact('0800 720 072', 'Nairobi Women\'s Hospital Crisis Line', Icons.local_hospital, Colors.green),
+              const SizedBox(height: 8),
+              _buildEmergencyContact('+254 20 272 0000', 'Aga Khan Hospital Mental Health', Icons.medical_services, Colors.blue),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildEmergencyContact(String number, String description, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                number,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showWellnessTips() {
+    final today = DateTime.now();
+    final tips = _getDailyWellnessTips(today);
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.psychology, color: const Color(0xFFE91E63)),
+              const SizedBox(width: 8),
+              const Text('Daily Wellness Tips'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${today.day}/${today.month}/${today.year}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...tips.map((tip) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: const Color(0xFFE91E63),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tip,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<String> _getDailyWellnessTips(DateTime date) {
+    // Use date to generate consistent tips for the day
+    final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays;
+    final tips = [
+      'Practice deep breathing for 5 minutes to reduce stress and anxiety.',
+      'Take a 10-minute walk outside to boost your mood and energy levels.',
+      'Write down three things you\'re grateful for today.',
+      'Stay hydrated - drink at least 8 glasses of water daily.',
+      'Limit screen time before bed to improve sleep quality.',
+      'Connect with a friend or family member today.',
+      'Try a new hobby or activity that brings you joy.',
+      'Practice self-compassion - be kind to yourself today.',
+      'Take regular breaks if you\'re working for long periods.',
+      'Express your feelings through writing or art.',
+      'Practice mindfulness by focusing on the present moment.',
+      'Get adequate sleep - aim for 7-9 hours per night.',
+      'Eat nutritious meals to support your mental health.',
+      'Set small, achievable goals for today.',
+      'Practice positive self-talk throughout the day.',
+      'Take time to appreciate nature and the outdoors.',
+      'Learn something new to keep your mind active.',
+      'Practice relaxation techniques like progressive muscle relaxation.',
+      'Maintain a regular daily routine for stability.',
+      'Seek professional help if you\'re struggling - it\'s a sign of strength.',
+    ];
+    
+    // Select 3 tips based on the day of year
+    final selectedTips = <String>[];
+    for (int i = 0; i < 3; i++) {
+      final index = (dayOfYear + i) % tips.length;
+      selectedTips.add(tips[index]);
+    }
+    
+    return selectedTips;
+  }
+
+  void _showChatbot() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('TheraPair Chat coming soon!'),
+        backgroundColor: Color(0xFFE91E63),
       ),
     );
   }

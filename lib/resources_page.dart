@@ -164,6 +164,141 @@ class ResourcesPage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildArticleCard(Map<String, dynamic> article) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cover Art
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFFE91E63).withOpacity(0.8),
+                  const Color(0xFF9C27B0).withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                _getArticleIcon(article['category']),
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // Article Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getCategoryColor(article['category']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        article['category'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _getCategoryColor(article['category']),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${article['readTime']} min read',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  article['title'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  article['excerpt'],
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getArticleIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'anxiety':
+        return Icons.psychology;
+      case 'depression':
+        return Icons.sentiment_dissatisfied;
+      case 'stress':
+        return Icons.trending_down;
+      case 'mindfulness':
+        return Icons.spa;
+      case 'relationships':
+        return Icons.favorite;
+      case 'self-care':
+        return Icons.healing;
+      default:
+        return Icons.article;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'anxiety':
+        return Colors.orange;
+      case 'depression':
+        return Colors.blue;
+      case 'stress':
+        return Colors.red;
+      case 'mindfulness':
+        return Colors.green;
+      case 'relationships':
+        return Colors.pink;
+      case 'self-care':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
 }
 
 class FilterButton extends StatelessWidget {
