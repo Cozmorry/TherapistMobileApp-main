@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/notification_service.dart';
+import 'dart:io';
 
 class TherapistSessionsPage extends StatefulWidget {
   const TherapistSessionsPage({super.key});
@@ -147,9 +148,17 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
     final date = DateTime.parse(booking['date']);
     final status = booking['status'] ?? 'pending';
     final clientName = booking['clientName'] ?? 'Unknown Client';
+    final clientEmail = booking['clientEmail'] ?? '';
     final sessionType = booking['sessionType'] ?? 'Individual Therapy';
     final time = booking['time'] ?? 'TBD';
     final duration = booking['duration'] ?? '60 minutes';
+
+    // Get client profile picture
+    String? clientProfilePicturePath;
+    if (clientEmail.isNotEmpty) {
+      final clientData = LocalStorageService.getUserDataByEmail(clientEmail);
+      clientProfilePicturePath = clientData?.profilePicturePath;
+    }
 
     Color statusColor;
     String statusText;
@@ -192,14 +201,33 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: const Color(0xFFE91E63),
-                  child: Text(
-                    clientName.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
+                  child: clientProfilePicturePath != null
+                      ? ClipOval(
+                          child: Image.file(
+                            File(clientProfilePicturePath),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                clientName.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Text(
+                          clientName.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

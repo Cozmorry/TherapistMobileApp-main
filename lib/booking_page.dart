@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/notification_service.dart';
+import 'dart:io';
 
 class BookingPage extends StatefulWidget {
   final Map<String, dynamic> therapist;
@@ -89,6 +90,14 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Widget _buildTherapistCard() {
+    // Get therapist profile picture
+    String? therapistProfilePicturePath;
+    final therapistEmail = widget.therapist['email'];
+    if (therapistEmail != null && therapistEmail.isNotEmpty) {
+      final therapistData = LocalStorageService.getUserDataByEmail(therapistEmail);
+      therapistProfilePicturePath = therapistData?.profilePicturePath;
+    }
+    
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -111,14 +120,33 @@ class _BookingPageState extends State<BookingPage> {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: const Color(0xFFE91E63),
-                child: Text(
-                  widget.therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
+                child: therapistProfilePicturePath != null
+                    ? ClipOval(
+                        child: Image.file(
+                          File(therapistProfilePicturePath),
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Text(
+                              widget.therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Text(
+                        widget.therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(

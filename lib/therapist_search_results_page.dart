@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:therapair/services/therapist_matching_service.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/booking_page.dart'; // Added import for BookingPage
+import 'dart:io';
 
 class TherapistSearchResultsPage extends StatefulWidget {
   const TherapistSearchResultsPage({super.key});
@@ -176,6 +177,14 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
     final matchDescription = TherapistMatchingService.getMatchDescription(matchPercentage);
     final matchColor = _parseColor(TherapistMatchingService.getMatchColor(matchPercentage));
     
+    // Get therapist profile picture
+    String? therapistProfilePicturePath;
+    final therapistEmail = therapist['email'];
+    if (therapistEmail != null && therapistEmail.isNotEmpty) {
+      final therapistData = LocalStorageService.getUserDataByEmail(therapistEmail);
+      therapistProfilePicturePath = therapistData?.profilePicturePath;
+    }
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -206,14 +215,33 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: matchColor,
-                  child: Text(
-                    therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
+                  child: therapistProfilePicturePath != null
+                      ? ClipOval(
+                          child: Image.file(
+                            File(therapistProfilePicturePath),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Text(
+                          therapist['name']?.toString().substring(0, 1).toUpperCase() ?? 'T',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

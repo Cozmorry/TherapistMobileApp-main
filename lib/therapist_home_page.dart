@@ -674,8 +674,25 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
   Widget _buildClientCard(Map<String, dynamic> client) {
     final clientName = client['name'] ?? 'Unknown Client';
     final clientEmail = client['email'] ?? '';
-    final totalBookings = client['totalBookings'] ?? 0;
-    final lastBooking = client['lastBooking'] ?? '';
+    
+    // Get client profile picture
+    String? clientProfilePicturePath;
+    if (clientEmail.isNotEmpty) {
+      final clientData = LocalStorageService.getUserDataByEmail(clientEmail);
+      clientProfilePicturePath = clientData?.profilePicturePath;
+    }
+    
+    // Count total bookings for this client
+    final currentUser = AuthService().currentUser;
+    int totalBookings = 0;
+    if (currentUser != null) {
+      final therapistEmail = currentUser.email!;
+      final allBookings = LocalStorageService.getAllBookings();
+      totalBookings = allBookings.where((booking) => 
+        booking['therapistEmail'] == therapistEmail && 
+        booking['clientEmail'] == clientEmail
+      ).length;
+    }
 
     return GestureDetector(
       onTap: () {
@@ -694,14 +711,33 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
               CircleAvatar(
                 radius: 25,
                 backgroundColor: const Color(0xFFE91E63),
-                child: Text(
-                  clientName.substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
+                child: clientProfilePicturePath != null
+                    ? ClipOval(
+                        child: Image.file(
+                          File(clientProfilePicturePath),
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Text(
+                              clientName.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Text(
+                        clientName.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -761,6 +797,13 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
     final clientName = client['name'] ?? 'Unknown Client';
     final clientEmail = client['email'] ?? '';
     
+    // Get client profile picture
+    String? clientProfilePicturePath;
+    if (clientEmail.isNotEmpty) {
+      final clientData = LocalStorageService.getUserDataByEmail(clientEmail);
+      clientProfilePicturePath = clientData?.profilePicturePath;
+    }
+    
     // Get all bookings for this specific client
     final currentUser = AuthService().currentUser;
     if (currentUser == null) return;
@@ -787,7 +830,6 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
           child: Container(
             constraints: const BoxConstraints(maxHeight: 400),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
@@ -804,14 +846,33 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: Colors.white,
-                        child: Text(
-                          clientName.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(
-                            color: Color(0xFFE91E63),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+                        child: clientProfilePicturePath != null
+                            ? ClipOval(
+                                child: Image.file(
+                                  File(clientProfilePicturePath),
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Text(
+                                      clientName.substring(0, 1).toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Color(0xFFE91E63),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Text(
+                                clientName.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFFE91E63),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
