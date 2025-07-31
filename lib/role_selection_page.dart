@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:therapair/client_onboarding_page.dart';
 import 'package:therapair/therapist_onboarding_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/models/user_model.dart';
 
 class RoleSelectionPage extends StatefulWidget {
   const RoleSelectionPage({super.key});
@@ -13,7 +15,10 @@ class RoleSelectionPage extends StatefulWidget {
 class _RoleSelectionPageState extends State<RoleSelectionPage> {
   @override
   Widget build(BuildContext context) {
-    final displayName = LocalStorageService.getUserDisplayName();
+    // Get current user email from Firebase
+    final currentUser = AuthService().currentUser;
+    final userEmail = currentUser?.email ?? 'User';
+    final displayName = currentUser?.displayName ?? userEmail.split('@')[0];
     
     return Scaffold(
       backgroundColor: const Color(0xFFFCE4EC),
@@ -146,8 +151,32 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     print('RoleSelectionPage: Selecting role: $role');
     
     try {
-      await LocalStorageService.updateUserRole(role);
-      print('RoleSelectionPage: Role saved successfully');
+      // Get current user from Firebase
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) {
+        print('RoleSelectionPage: No current user found');
+        return;
+      }
+      
+      final userEmail = currentUser.email!;
+      print('RoleSelectionPage: Saving role for user: $userEmail');
+      
+      // Load existing user data or create new
+      var userData = LocalStorageService.getUserDataByEmail(userEmail);
+      if (userData == null) {
+        // Create new user data
+        userData = UserModel.fromFirebaseUser(currentUser);
+        print('RoleSelectionPage: Creating new user data for $userEmail');
+      }
+      
+      // Update role
+      userData.setRole(role);
+      
+      // Save user data by email
+      await LocalStorageService.saveUserDataByEmail(userEmail, userData);
+      await LocalStorageService.saveCurrentUser(userData); // For backward compatibility
+      
+      print('RoleSelectionPage: Role saved successfully for $userEmail');
       
       if (mounted) {
         if (role == 'client') {

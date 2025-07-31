@@ -6,6 +6,7 @@ import 'package:therapair/feedback_page.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/login_page.dart'; // Added import for LoginPage
+import 'package:therapair/models/user_model.dart'; // Added import for UserModel
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -31,14 +32,51 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadUserProfile();
   }
 
-  void _loadUserProfile() {
+  Future<void> _loadUserProfile() async {
+    print('Settings: Loading user profile...');
+    
+    // Get current user from Firebase
+    final currentUser = _authService.currentUser;
+    if (currentUser == null) {
+      print('Settings: No current user found');
+      return;
+    }
+    
+    final userEmail = currentUser.email!;
+    print('Settings: Loading profile for user: $userEmail');
+    
+    // Load user data by email
+    final userData = LocalStorageService.getUserDataByEmail(userEmail);
+    
     setState(() {
       _userProfile = {
-        'username': LocalStorageService.getUserDisplayName(),
-        'email': LocalStorageService.getCurrentUser()?.email ?? 'user@example.com',
+        'username': userData?.getDisplayName() ?? userEmail.split('@')[0],
+        'email': userEmail,
       };
-      _onboardingData = LocalStorageService.getUserOnboardingData();
+      _onboardingData = userData?.onboardingData;
     });
+    
+    // Load profile picture
+    final profilePicturePath = userData?.profilePicturePath;
+    print('Settings: Profile picture path from storage: $profilePicturePath');
+    
+    if (profilePicturePath != null) {
+      try {
+        final file = File(profilePicturePath);
+        if (await file.exists()) {
+          setState(() {
+            _profileImage = file;
+          });
+          print('Settings: Profile image loaded: ${_profileImage?.path}');
+        } else {
+          print('Settings: Profile image file does not exist: $profilePicturePath');
+        }
+      } catch (e) {
+        print('Settings: Error loading profile image: $e');
+      }
+    } else {
+      print('Settings: No profile picture path found');
+    }
   }
 
   Future<bool> _requestPermissions(ImageSource source) async {
@@ -122,9 +160,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
+      print('Settings: Starting image picker for source: $source');
+      
       // Check and request permissions first
       final hasPermission = await _requestPermissions(source);
+      print('Settings: Permission result: $hasPermission');
+      
       if (!hasPermission) {
+        print('Settings: Permission denied, returning');
         return;
       }
 
@@ -139,6 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       }
 
+      print('Settings: Calling image picker...');
       final XFile? image = await _picker.pickImage(
         source: source,
         maxWidth: 512,
@@ -146,13 +190,40 @@ class _SettingsPageState extends State<SettingsPage> {
         imageQuality: 80,
       );
       
+      print('Settings: Image picker result: ${image?.path}');
+      
       if (image != null) {
+        print('Settings: Setting profile image to: ${image.path}');
         setState(() {
           _profileImage = File(image.path);
         });
         
         // Save profile picture path to local storage
-        await LocalStorageService.updateUserProfilePicture(image.path);
+        print('Settings: Saving profile picture to local storage...');
+        
+        // Get current user from Firebase
+        final currentUser = _authService.currentUser;
+        if (currentUser != null) {
+          final userEmail = currentUser.email!;
+          
+          // Load existing user data
+          var userData = LocalStorageService.getUserDataByEmail(userEmail);
+          if (userData == null) {
+            print('Settings: No user data found for $userEmail, creating new');
+            userData = UserModel.fromFirebaseUser(currentUser);
+          }
+          
+          // Update profile picture path
+          userData.setProfilePicture(image.path);
+          
+          // Save user data by email
+          await LocalStorageService.saveUserDataByEmail(userEmail, userData);
+          await LocalStorageService.saveCurrentUser(userData); // For backward compatibility
+          
+          print('Settings: Profile picture saved successfully for $userEmail');
+        } else {
+          print('Settings: No current user found for saving profile picture');
+        }
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -164,6 +235,7 @@ class _SettingsPageState extends State<SettingsPage> {
           );
         }
       } else {
+        print('Settings: No image selected');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -175,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e) {
-      print('Image picker error: $e');
+      print('Settings: Image picker error: $e');
       
       // Show fallback option if image picker fails
       if (mounted) {

@@ -4,6 +4,7 @@ import 'package:therapair/sessions_page.dart';
 import 'package:therapair/resources_page.dart';
 import 'package:therapair/settings_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/therapist_search_results_page.dart';
 import 'dart:io';
 
@@ -26,11 +27,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadUserData() {
-    setState(() {
-      _username = LocalStorageService.getUserDisplayName();
-      _onboardingCompleted = LocalStorageService.isOnboardingCompleted();
-      _profilePicturePath = LocalStorageService.getCurrentUser()?.profilePicturePath;
-    });
+    // Get current user from Firebase
+    final currentUser = AuthService().currentUser;
+    if (currentUser != null) {
+      final userEmail = currentUser.email!;
+      
+      // Load user data by email
+      final userData = LocalStorageService.getUserDataByEmail(userEmail);
+      
+      setState(() {
+        _username = userData?.getDisplayName() ?? userEmail.split('@')[0];
+        _onboardingCompleted = userData?.isOnboardingCompleted ?? false;
+        _profilePicturePath = userData?.profilePicturePath;
+      });
+    }
   }
 
   @override

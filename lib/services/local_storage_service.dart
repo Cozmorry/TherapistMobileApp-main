@@ -248,6 +248,31 @@ class LocalStorageService {
     }
   }
 
+  static void debugPrintAllTherapists() {
+    try {
+      final allTherapists = getAllTherapists();
+      print('=== DEBUG: ALL THERAPISTS ===');
+      print('Total therapists: ${allTherapists.length}');
+      for (int i = 0; i < allTherapists.length; i++) {
+        final therapist = allTherapists[i];
+        print('Therapist $i:');
+        print('  - Name: ${therapist['name']}');
+        print('  - Username: ${therapist['username']}');
+        print('  - Email: ${therapist['email']}');
+        print('  - Specialization: ${therapist['specialization']}');
+        print('  - Therapeutic Approach: ${therapist['therapeuticApproach']}');
+        print('  - Session Type: ${therapist['sessionType']}');
+        print('  - Communication Style: ${therapist['communicationStyle']}');
+        print('  - Bio: ${therapist['bio']}');
+        print('  - Completed At: ${therapist['completedAt']}');
+        print('---');
+      }
+      print('=== END DEBUG ===');
+    } catch (e) {
+      print('Error in debugPrintAllTherapists: $e');
+    }
+  }
+
   // Query methods
   static bool isOnboardingCompleted() {
     try {
@@ -319,6 +344,16 @@ class LocalStorageService {
     }
   }
 
+  static String? getUserProfilePicturePath() {
+    try {
+      final currentUser = getCurrentUser();
+      return currentUser?.profilePicturePath;
+    } catch (e) {
+      print('LocalStorage: Error getting profile picture path: $e');
+      return null;
+    }
+  }
+
   // Clear methods
   static Future<void> clearAuthData() async {
     try {
@@ -336,6 +371,28 @@ class LocalStorageService {
     }
   }
 
+  static Future<void> clearUserData() async {
+    try {
+      final currentUser = getCurrentUser();
+      if (currentUser != null) {
+        // Clear only user-specific fields, preserve app data like bookings
+        currentUser.uid = null;
+        currentUser.email = null;
+        currentUser.displayName = null;
+        currentUser.username = null;
+        currentUser.role = null;
+        currentUser.profilePicturePath = null;
+        currentUser.isOnboardingCompleted = false;
+        currentUser.onboardingData = null;
+        currentUser.lastLoginAt = null;
+        await saveCurrentUser(currentUser);
+        print('LocalStorage: User data cleared, app data preserved');
+      }
+    } catch (e) {
+      print('LocalStorage: Error clearing user data: $e');
+    }
+  }
+
   static Future<void> clearAllData() async {
     try {
       if (_useMemoryFallback) {
@@ -347,6 +404,199 @@ class LocalStorageService {
       }
     } catch (e) {
       print('LocalStorage: Error clearing all data: $e');
+    }
+  }
+
+  static Future<void> clearCurrentUser() async {
+    try {
+      if (_useMemoryFallback) {
+        _memoryStorage.remove('current_user');
+        print('LocalStorage: Current user cleared from memory');
+      } else {
+        await _prefs?.remove('current_user');
+        print('LocalStorage: Current user cleared from SharedPreferences');
+      }
+    } catch (e) {
+      print('LocalStorage: Error clearing current user: $e');
+    }
+  }
+
+  // Booking data methods
+  static Future<void> saveBooking(Map<String, dynamic> bookingData) async {
+    try {
+      final bookings = getAllBookings();
+      bookings.add(bookingData);
+      
+      final bookingsJson = jsonEncode(bookings);
+      print('LocalStorage: Saving booking, total: ${bookings.length}');
+      
+      if (_useMemoryFallback) {
+        _memoryStorage['all_bookings'] = bookingsJson;
+        print('LocalStorage: Bookings saved to memory');
+      } else {
+        await _prefs?.setString('all_bookings', bookingsJson);
+        print('LocalStorage: Bookings saved to SharedPreferences');
+      }
+    } catch (e) {
+      print('LocalStorage: Error saving booking: $e');
+    }
+  }
+
+  static List<Map<String, dynamic>> getAllBookings() {
+    try {
+      String? bookingsJson;
+      
+      if (_useMemoryFallback) {
+        bookingsJson = _memoryStorage['all_bookings'];
+        print('LocalStorage: Getting all bookings from memory: $bookingsJson');
+      } else {
+        bookingsJson = _prefs?.getString('all_bookings');
+        print('LocalStorage: Getting all bookings from SharedPreferences: $bookingsJson');
+      }
+      
+      if (bookingsJson != null && bookingsJson.isNotEmpty) {
+        final List<dynamic> bookingsList = jsonDecode(bookingsJson);
+        final bookings = bookingsList.map((b) => Map<String, dynamic>.from(b)).toList();
+        print('LocalStorage: Retrieved ${bookings.length} bookings');
+        return bookings;
+      }
+      
+      print('LocalStorage: No bookings found');
+      return [];
+    } catch (e) {
+      print('LocalStorage: Error getting all bookings: $e');
+      return [];
+    }
+  }
+
+  static List<Map<String, dynamic>> getClientBookings(String clientEmail) {
+    try {
+      final allBookings = getAllBookings();
+      final clientBookings = allBookings.where((booking) => booking['clientEmail'] == clientEmail).toList();
+      print('LocalStorage: Found ${clientBookings.length} bookings for client $clientEmail');
+      return clientBookings;
+    } catch (e) {
+      print('LocalStorage: Error getting client bookings: $e');
+      return [];
+    }
+  }
+
+  static List<Map<String, dynamic>> getTherapistBookings(String therapistEmail) {
+    try {
+      final allBookings = getAllBookings();
+      final therapistBookings = allBookings.where((booking) => booking['therapistEmail'] == therapistEmail).toList();
+      print('LocalStorage: Found ${therapistBookings.length} bookings for therapist $therapistEmail');
+      return therapistBookings;
+    } catch (e) {
+      print('LocalStorage: Error getting therapist bookings: $e');
+      return [];
+    }
+  }
+
+  static Future<void> updateBookingStatus(String bookingId, String newStatus) async {
+    try {
+      final allBookings = getAllBookings();
+      final bookingIndex = allBookings.indexWhere((booking) => booking['bookedAt'] == bookingId);
+      
+      if (bookingIndex != -1) {
+        allBookings[bookingIndex]['status'] = newStatus;
+        
+        final bookingsJson = jsonEncode(allBookings);
+        print('LocalStorage: Updating booking status to $newStatus');
+        
+        if (_useMemoryFallback) {
+          _memoryStorage['all_bookings'] = bookingsJson;
+          print('LocalStorage: Booking status updated in memory');
+        } else {
+          await _prefs?.setString('all_bookings', bookingsJson);
+          print('LocalStorage: Booking status updated in SharedPreferences');
+        }
+      }
+    } catch (e) {
+      print('LocalStorage: Error updating booking status: $e');
+    }
+  }
+
+  static void debugPrintAllBookings() {
+    try {
+      final allBookings = getAllBookings();
+      print('=== DEBUG: ALL BOOKINGS ===');
+      print('Total bookings: ${allBookings.length}');
+      for (int i = 0; i < allBookings.length; i++) {
+        final booking = allBookings[i];
+        print('Booking $i:');
+        print('  - Therapist Email: ${booking['therapistEmail']}');
+        print('  - Therapist Name: ${booking['therapistName']}');
+        print('  - Client Email: ${booking['clientEmail']}');
+        print('  - Client Name: ${booking['clientName']}');
+        print('  - Date: ${booking['date']}');
+        print('  - Time: ${booking['time']}');
+        print('  - Status: ${booking['status']}');
+        print('  - Session Type: ${booking['sessionType']}');
+        print('  - Duration: ${booking['duration']}');
+        print('  - Notes: ${booking['notes']}');
+        print('  - Booked At: ${booking['bookedAt']}');
+        print('---');
+      }
+      print('=== END DEBUG ===');
+    } catch (e) {
+      print('Error in debugPrintAllBookings: $e');
+    }
+  }
+
+  // User-specific data methods (by email)
+  static Future<void> saveUserDataByEmail(String email, UserModel user) async {
+    try {
+      final userJson = jsonEncode(user.toMap());
+      final key = 'user_data_${email.replaceAll('@', '_at_').replaceAll('.', '_dot_')}';
+      print('LocalStorage: Saving user data for $email with key: $key');
+      
+      if (_useMemoryFallback) {
+        _memoryStorage[key] = userJson;
+        print('LocalStorage: User data saved to memory for $email');
+      } else {
+        await _prefs?.setString(key, userJson);
+        print('LocalStorage: User data saved to SharedPreferences for $email');
+      }
+    } catch (e) {
+      print('LocalStorage: Error saving user data for $email: $e');
+    }
+  }
+
+  static UserModel? getUserDataByEmail(String email) {
+    try {
+      final key = 'user_data_${email.replaceAll('@', '_at_').replaceAll('.', '_dot_')}';
+      String? userJson;
+      
+      if (_useMemoryFallback) {
+        userJson = _memoryStorage[key];
+        print('LocalStorage: Getting user data from memory for $email: $userJson');
+      } else {
+        userJson = _prefs?.getString(key);
+        print('LocalStorage: Getting user data from SharedPreferences for $email: $userJson');
+      }
+      
+      if (userJson != null && userJson.isNotEmpty) {
+        final userMap = Map<String, dynamic>.from(jsonDecode(userJson));
+        final user = UserModel.fromMap(userMap);
+        print('LocalStorage: Retrieved user data for $email: ${user.toMap()}');
+        return user;
+      }
+      
+      print('LocalStorage: No user data found for $email');
+      return null;
+    } catch (e) {
+      print('LocalStorage: Error getting user data for $email: $e');
+      return null;
+    }
+  }
+
+  static Future<void> updateUserDataByEmail(String email, UserModel user) async {
+    try {
+      await saveUserDataByEmail(email, user);
+      print('LocalStorage: Updated user data for $email');
+    } catch (e) {
+      print('LocalStorage: Error updating user data for $email: $e');
     }
   }
 } 

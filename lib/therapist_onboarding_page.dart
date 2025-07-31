@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/therapist_home_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/models/user_model.dart';
 
 class TherapistOnboardingPage extends StatefulWidget {
   const TherapistOnboardingPage({super.key});
@@ -481,7 +483,24 @@ class _TherapistOnboardingPageState extends State<TherapistOnboardingPage> {
     });
 
     try {
-      // Save therapist onboarding data to local storage
+      // Get current user from Firebase
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) {
+        print('TherapistOnboardingPage: No current user found');
+        return;
+      }
+      
+      final userEmail = currentUser.email!;
+      print('TherapistOnboardingPage: Completing onboarding for user: $userEmail');
+      
+      // Load existing user data
+      var userData = LocalStorageService.getUserDataByEmail(userEmail);
+      if (userData == null) {
+        print('TherapistOnboardingPage: No user data found for $userEmail, creating new');
+        userData = UserModel.fromFirebaseUser(currentUser);
+      }
+      
+      // Save therapist onboarding data
       final onboardingData = {
         'username': _usernameController.text,
         'name': _nameController.text,
@@ -496,17 +515,20 @@ class _TherapistOnboardingPageState extends State<TherapistOnboardingPage> {
         'completedAt': DateTime.now().toIso8601String(),
       };
       
-      await LocalStorageService.completeUserOnboarding(onboardingData);
+      // Update user data
+      userData.completeOnboarding(onboardingData);
+      userData.username = _usernameController.text;
+      
+      // Save user data by email
+      await LocalStorageService.saveUserDataByEmail(userEmail, userData);
+      await LocalStorageService.saveCurrentUser(userData); // For backward compatibility
       
       // Add therapist to the global therapists list for matching
-      await LocalStorageService.addTherapistToList(onboardingData);
+      final therapistDataWithEmail = Map<String, dynamic>.from(onboardingData);
+      therapistDataWithEmail['email'] = userEmail; // Add email for booking system
+      await LocalStorageService.addTherapistToList(therapistDataWithEmail);
       
-      // Update user's username in the user model
-      final currentUser = LocalStorageService.getCurrentUser();
-      if (currentUser != null) {
-        currentUser.username = _usernameController.text;
-        await LocalStorageService.saveCurrentUser(currentUser);
-      }
+      print('TherapistOnboardingPage: Onboarding completed successfully for $userEmail');
       
       if (mounted) {
         Navigator.pushReplacement(
@@ -517,6 +539,7 @@ class _TherapistOnboardingPageState extends State<TherapistOnboardingPage> {
         );
       }
     } catch (e) {
+      print('TherapistOnboardingPage: Error completing onboarding: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

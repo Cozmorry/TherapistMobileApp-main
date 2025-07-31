@@ -7,6 +7,8 @@ import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/role_selection_page.dart';
 import 'package:therapair/client_onboarding_page.dart';
 import 'package:therapair/therapist_home_page.dart';
+import 'package:therapair/therapist_onboarding_page.dart';
+import 'package:therapair/models/user_model.dart';
 
 // Global key to force app refresh
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -97,33 +99,56 @@ class _AuthWrapperState extends State<AuthWrapper> {
           return const LoginPage();
         }
 
-        // User is authenticated - check if they have a role
-        final hasRole = LocalStorageService.hasRole();
-        final isOnboardingCompleted = LocalStorageService.isOnboardingCompleted();
-        final currentUser = LocalStorageService.getCurrentUser();
+        // User is authenticated - load their data by email
+        final userEmail = firebaseUser!.email!;
+        final userData = LocalStorageService.getUserDataByEmail(userEmail);
+        final currentUserData = LocalStorageService.getCurrentUser();
         
-        print('- Has role: $hasRole');
-        print('- Is onboarding completed: $isOnboardingCompleted');
-        print('- User role: ${LocalStorageService.getUserRole()}');
-        print('- Is therapist: ${LocalStorageService.isTherapist()}');
-        print('- Is client: ${LocalStorageService.isClient()}');
-        print('- Local user: ${currentUser?.email ?? 'none'}');
+        print('AuthWrapper Debug:');
+        print('- Firebase authenticated: $isFirebaseAuthenticated');
+        print('- Firebase user email: $userEmail');
+        print('- Firebase user UID: ${firebaseUser.uid}');
+        print('- User data found by email: ${userData != null}');
+        print('- Current user data found: ${currentUserData != null}');
+        
+        // Check both storage locations
+        UserModel? finalUserData = userData ?? currentUserData;
+        
+        if (finalUserData == null) {
+          // New user - needs to select a role
+          print('No user data found for $userEmail - redirecting to role selection');
+          return const RoleSelectionPage();
+        }
+        
+        print('- User role: ${finalUserData.role}');
+        print('- Is onboarding completed: ${finalUserData.isOnboardingCompleted}');
+        print('- Is therapist: ${finalUserData.isTherapist}');
+        print('- Is client: ${finalUserData.isClient}');
+        print('- User onboarding data: ${finalUserData.onboardingData}');
+        
+        // Check if user has completed role selection and onboarding
+        final hasRole = finalUserData.role != null && finalUserData.role!.isNotEmpty;
+        final isOnboardingCompleted = finalUserData.isOnboardingCompleted;
         
         if (!hasRole) {
           // User needs to select a role
-          print('Redirecting to role selection');
+          print('User has no role - redirecting to role selection');
           return const RoleSelectionPage();
-        } else if (LocalStorageService.isClient() && !isOnboardingCompleted) {
+        } else if (finalUserData.isClient && !isOnboardingCompleted) {
           // Client needs to complete onboarding
-          print('Redirecting to client onboarding');
+          print('Client needs onboarding - redirecting to client onboarding');
           return const ClientOnboardingPage();
-        } else if (LocalStorageService.isTherapist()) {
+        } else if (finalUserData.isTherapist && !isOnboardingCompleted) {
+          // Therapist needs to complete onboarding
+          print('Therapist needs onboarding - redirecting to therapist onboarding');
+          return const TherapistOnboardingPage();
+        } else if (finalUserData.isTherapist) {
           // Therapist goes to therapist dashboard
-          print('Redirecting to therapist dashboard');
+          print('Therapist onboarding completed - redirecting to therapist dashboard');
           return const TherapistHomePage();
         } else {
           // Client goes to main layout
-          print('Redirecting to client main layout');
+          print('Client onboarding completed - redirecting to client main layout');
           return const MainLayout(isTherapist: false);
         }
       },

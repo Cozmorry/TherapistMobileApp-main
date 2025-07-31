@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/therapist_matching_service.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/booking_page.dart'; // Added import for BookingPage
 
 class TherapistSearchResultsPage extends StatefulWidget {
   const TherapistSearchResultsPage({super.key});
@@ -83,58 +84,33 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE91E63).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(60),
-              ),
-              child: const Icon(
-                Icons.search_off,
-                color: Color(0xFFE91E63),
-                size: 60,
-              ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No matching therapists found',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'No Therapists Found',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your preferences to find more therapists',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'We couldn\'t find any therapists that match your preferences with at least 50% compatibility.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE91E63),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-              child: const Text('Go Back'),
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -352,13 +328,18 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      _bookSession(therapist);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingPage(therapist: therapist),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE91E63),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                     child: const Text('Book Session'),

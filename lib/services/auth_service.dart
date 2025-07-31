@@ -53,12 +53,10 @@ class AuthService {
       // Sign in to Firebase with the credential
       final userCredential = await _auth.signInWithCredential(credential);
       
-      // Save user data to local storage
+      // Save user data to local storage, preserving existing data
       if (userCredential.user != null) {
         print('Google Sign-In: Saving user data to local storage');
-        final userModel = UserModel.fromFirebaseUser(userCredential.user!);
-        await LocalStorageService.saveCurrentUser(userModel);
-        await LocalStorageService.updateLastLogin();
+        await _saveUserDataByEmail(userCredential.user!);
         print('Google Sign-In: User data saved successfully');
       }
       
@@ -75,10 +73,8 @@ class AuthService {
         final currentUser = _auth.currentUser;
         if (currentUser != null) {
           print('User is actually signed in despite PigeonUserDetails error');
-          // Save user data to local storage
-          final userModel = UserModel.fromFirebaseUser(currentUser);
-          await LocalStorageService.saveCurrentUser(userModel);
-          await LocalStorageService.updateLastLogin();
+          // Save user data to local storage, preserving existing data
+          await _saveUserDataByEmail(currentUser);
           return null; // We'll handle this in the login page by checking currentUser
         }
         
@@ -101,12 +97,10 @@ class AuthService {
       
       print('AuthService: Firebase signup successful');
       
-      // Save user data to local storage
+      // Save user data to local storage, preserving existing data
       if (userCredential.user != null) {
         print('Email/Password Sign-Up: Saving user data to local storage');
-        final userModel = UserModel.fromFirebaseUser(userCredential.user!);
-        await LocalStorageService.saveCurrentUser(userModel);
-        await LocalStorageService.updateLastLogin();
+        await _saveUserDataByEmail(userCredential.user!);
         print('Email/Password Sign-Up: User data saved successfully');
       }
       
@@ -123,10 +117,8 @@ class AuthService {
         final currentUser = _auth.currentUser;
         if (currentUser != null) {
           print('User is actually created despite PigeonUserDetails error');
-          // Save user data to local storage
-          final userModel = UserModel.fromFirebaseUser(currentUser);
-          await LocalStorageService.saveCurrentUser(userModel);
-          await LocalStorageService.updateLastLogin();
+          // Save user data to local storage, preserving existing data
+          await _saveUserDataByEmail(currentUser);
           return null; // We'll handle this in the login page by checking currentUser
         }
       }
@@ -163,12 +155,10 @@ class AuthService {
       
       print('AuthService: Firebase signin successful');
       
-      // Save user data to local storage
+      // Save user data to local storage, preserving existing data
       if (userCredential.user != null) {
         print('Email/Password Sign-In: Saving user data to local storage');
-        final userModel = UserModel.fromFirebaseUser(userCredential.user!);
-        await LocalStorageService.saveCurrentUser(userModel);
-        await LocalStorageService.updateLastLogin();
+        await _saveUserDataByEmail(userCredential.user!);
         print('Email/Password Sign-In: User data saved successfully');
       }
       
@@ -185,10 +175,8 @@ class AuthService {
         final currentUser = _auth.currentUser;
         if (currentUser != null) {
           print('User is actually signed in despite PigeonUserDetails error');
-          // Save user data to local storage
-          final userModel = UserModel.fromFirebaseUser(currentUser);
-          await LocalStorageService.saveCurrentUser(userModel);
-          await LocalStorageService.updateLastLogin();
+          // Save user data to local storage, preserving existing data
+          await _saveUserDataByEmail(currentUser);
           return null; // We'll handle this in the login page by checking currentUser
         }
       }
@@ -221,11 +209,39 @@ class AuthService {
       print('Sign out: Starting logout process');
       await _auth.signOut();
       await _googleSignIn.signOut();
-      // Don't clear all data - just clear authentication data
-      await LocalStorageService.clearAuthData();
-      print('Sign out successful');
+      // Clear current user data but keep all user-specific data intact
+      await LocalStorageService.clearCurrentUser();
+      print('Sign out successful - current user cleared, all user data preserved');
     } catch (e) {
       print('Sign out error: $e');
     }
+  }
+
+  // Helper to save user data to local storage, loading existing data by email
+  Future<void> _saveUserDataByEmail(User user) async {
+    print('AuthService: Loading/saving user data for ${user.email}');
+    
+    // Try to load existing user data for this email
+    final existingUserData = LocalStorageService.getUserDataByEmail(user.email!);
+    
+    if (existingUserData != null) {
+      print('AuthService: Found existing user data for ${user.email}, preserving role and onboarding');
+      // Update with new Firebase data but preserve existing role and onboarding
+      final updatedUserModel = UserModel.fromFirebaseUser(user);
+      updatedUserModel.role = existingUserData.role;
+      updatedUserModel.isOnboardingCompleted = existingUserData.isOnboardingCompleted;
+      updatedUserModel.onboardingData = existingUserData.onboardingData;
+      updatedUserModel.username = existingUserData.username;
+      updatedUserModel.profilePicturePath = existingUserData.profilePicturePath;
+      await LocalStorageService.saveUserDataByEmail(user.email!, updatedUserModel);
+      await LocalStorageService.saveCurrentUser(updatedUserModel); // For backward compatibility
+    } else {
+      print('AuthService: No existing user data found for ${user.email}, creating new user');
+      // Create fresh user data
+      final newUserModel = UserModel.fromFirebaseUser(user);
+      await LocalStorageService.saveUserDataByEmail(user.email!, newUserModel);
+      await LocalStorageService.saveCurrentUser(newUserModel); // For backward compatibility
+    }
+    await LocalStorageService.updateLastLogin();
   }
 } 

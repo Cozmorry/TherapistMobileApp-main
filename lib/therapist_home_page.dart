@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/session_schedule_page.dart';
 import 'package:therapair/settings_page.dart';
+import 'package:therapair/therapist_sessions_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/auth_service.dart';
 
 class TherapistHomePage extends StatefulWidget {
   const TherapistHomePage({super.key});
@@ -14,49 +16,79 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   int _currentIndex = 0;
   
   Map<String, dynamic> _userProfile = {
-    'username': 'Dr. Sarah Johnson',
-    'email': 'sarah.johnson@example.com',
+    'username': 'Therapist',
+    'email': 'therapist@example.com',
   };
-
-  final List<Map<String, dynamic>> _upcomingSessions = [
-    {
-      'clientName': 'John Doe',
-      'date': 'March 15, 2024',
-      'time': '2:00 PM',
-      'status': 'Scheduled',
-    },
-    {
-      'clientName': 'Jane Smith',
-      'date': 'March 15, 2024',
-      'time': '4:00 PM',
-      'status': 'Confirmed',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _clientInteractions = [
-    {
-      'clientName': 'John Doe',
-      'date': 'March 10, 2024',
-    },
-    {
-      'clientName': 'Jane Smith',
-      'date': 'March 8, 2024',
-    },
-  ];
+  
+  int _pendingSessions = 0;
+  int _confirmedSessions = 0;
+  int _completedSessions = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadSessionStats();
   }
 
   void _loadUserProfile() {
-    setState(() {
-      _userProfile = {
-        'username': LocalStorageService.getUserDisplayName(),
-        'email': LocalStorageService.getCurrentUser()?.email ?? 'therapist@example.com',
-      };
-    });
+    // Get current user from Firebase
+    final currentUser = AuthService().currentUser;
+    if (currentUser != null) {
+      final userEmail = currentUser.email!;
+      
+      // Load user data by email
+      final userData = LocalStorageService.getUserDataByEmail(userEmail);
+      
+      setState(() {
+        _userProfile = {
+          'username': userData?.getDisplayName() ?? userEmail.split('@')[0],
+          'email': userEmail,
+        };
+      });
+    }
+  }
+
+  void _loadSessionStats() {
+    // Get current user from Firebase
+    final currentUser = AuthService().currentUser;
+    if (currentUser != null) {
+      final userEmail = currentUser.email!;
+      print('TherapistHomePage: Loading session stats for therapist: $userEmail');
+      
+      // Debug: Print all therapists and bookings
+      LocalStorageService.debugPrintAllTherapists();
+      LocalStorageService.debugPrintAllBookings();
+      
+      final bookings = LocalStorageService.getTherapistBookings(userEmail);
+      
+      int pending = 0;
+      int confirmed = 0;
+      int completed = 0;
+      
+      for (final booking in bookings) {
+        final status = booking['status'] ?? 'pending';
+        switch (status) {
+          case 'pending':
+            pending++;
+            break;
+          case 'confirmed':
+            confirmed++;
+            break;
+          case 'completed':
+            completed++;
+            break;
+        }
+      }
+      
+      print('TherapistHomePage: Session stats - Pending: $pending, Confirmed: $confirmed, Completed: $completed');
+      
+      setState(() {
+        _pendingSessions = pending;
+        _confirmedSessions = confirmed;
+        _completedSessions = completed;
+      });
+    }
   }
 
   @override
@@ -130,21 +162,14 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+        children: [
           // Welcome Section
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFE91E63),
               borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,60 +179,74 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'You have ${_upcomingSessions.length} upcoming sessions today',
-                  style: const TextStyle(
+                const Text(
+                  'Ready to help your clients today?',
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: Colors.white70,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 20.0),
 
-          // Upcoming Sessions Section
+          // Stats Section
           const Text(
-            'Upcoming Sessions',
+            'Today\'s Overview',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10.0),
-          if (_upcomingSessions.isEmpty)
-            const Center(
-              child: Text(
-                'No upcoming sessions',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Pending Sessions',
+                  '$_pendingSessions',
+                  Icons.schedule,
+                  Colors.orange,
                 ),
               ),
-            )
-          else
-            ..._upcomingSessions.map((session) => Card(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFE91E63),
-                  child: Icon(Icons.person, color: Colors.white),
-                ),
-                title: Text(session['clientName'] ?? 'Client'),
-                subtitle: Text('${session['date']} at ${session['time']}'),
-                trailing: Text(
-                  session['status'] ?? 'Scheduled',
-                  style: const TextStyle(
-                    color: Color(0xFFE91E63),
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatCard(
+                  'Confirmed Sessions',
+                  '$_confirmedSessions',
+                  Icons.check_circle,
+                  Colors.green,
                 ),
               ),
-            )),
+            ],
+          ),
+          const SizedBox(height: 10.0),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Completed Sessions',
+                  '$_completedSessions',
+                  Icons.done_all,
+                  Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatCard(
+                  'Total Sessions',
+                  '${_pendingSessions + _confirmedSessions + _completedSessions}',
+                  Icons.analytics,
+                  const Color(0xFFE91E63),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 20.0),
 
           // Quick Actions Section
@@ -248,72 +287,81 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
     );
   }
 
-  Widget _buildSessionsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'All Sessions',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Add session management content here
-          const Center(
-            child: Text(
-              'Session management coming soon!',
-              style: TextStyle(
+  Widget _buildStatCard(String title, String count, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 30),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 5),
+            Text(
+              count,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFE91E63),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildSessionsTab() {
+    return const TherapistSessionsPage();
+  }
+
   Widget _buildClientsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE91E63).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: const Icon(
+              Icons.people,
+              color: Color(0xFFE91E63),
+              size: 60,
+            ),
+          ),
+          const SizedBox(height: 24),
           const Text(
-            'My Clients',
+            'No Clients Yet',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 20),
-          if (_clientInteractions.isEmpty)
-            const Center(
-              child: Text(
-                'No clients yet',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-            )
-          else
-            ..._clientInteractions.map((interaction) => Card(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  child: Icon(Icons.person, color: Colors.white),
-                ),
-                title: Text(interaction['clientName'] ?? 'Client'),
-                subtitle: Text('Last session: ${interaction['date']}'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              ),
-            )),
+          const SizedBox(height: 12),
+          const Text(
+            'Your clients will appear here once they book sessions.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -322,4 +370,15 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   Widget _buildSettingsTab() {
     return const SettingsPage();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh stats when returning to home tab
+    if (_currentIndex == 0) {
+      _loadSessionStats();
+    }
+  }
 }
+
+

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/widgets/main_layout.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/models/user_model.dart';
 
 class ClientOnboardingPage extends StatefulWidget {
   const ClientOnboardingPage({super.key});
@@ -439,9 +441,26 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
     });
 
     try {
-      // Save onboarding data to local storage
+      // Get current user from Firebase
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) {
+        print('ClientOnboardingPage: No current user found');
+        return;
+      }
+      
+      final userEmail = currentUser.email!;
+      print('ClientOnboardingPage: Completing onboarding for user: $userEmail');
+      
+      // Load existing user data
+      var userData = LocalStorageService.getUserDataByEmail(userEmail);
+      if (userData == null) {
+        print('ClientOnboardingPage: No user data found for $userEmail, creating new');
+        userData = UserModel.fromFirebaseUser(currentUser);
+      }
+      
+      // Save onboarding data
       final onboardingData = {
-        'username': _usernameController.text, // Add username to onboarding data
+        'username': _usernameController.text,
         'name': _nameController.text,
         'age': int.parse(_ageController.text),
         'gender': _selectedGender,
@@ -453,14 +472,15 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
         'completedAt': DateTime.now().toIso8601String(),
       };
       
-      await LocalStorageService.completeUserOnboarding(onboardingData);
+      // Update user data
+      userData.completeOnboarding(onboardingData);
+      userData.username = _usernameController.text;
       
-      // Update user's username in the user model
-      final currentUser = LocalStorageService.getCurrentUser();
-      if (currentUser != null) {
-        currentUser.username = _usernameController.text;
-        await LocalStorageService.saveCurrentUser(currentUser);
-      }
+      // Save user data by email
+      await LocalStorageService.saveUserDataByEmail(userEmail, userData);
+      await LocalStorageService.saveCurrentUser(userData); // For backward compatibility
+      
+      print('ClientOnboardingPage: Onboarding completed successfully for $userEmail');
       
       if (mounted) {
         Navigator.pushReplacement(
@@ -471,6 +491,7 @@ class _ClientOnboardingPageState extends State<ClientOnboardingPage> {
         );
       }
     } catch (e) {
+      print('ClientOnboardingPage: Error completing onboarding: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
