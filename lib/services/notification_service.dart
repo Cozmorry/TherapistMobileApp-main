@@ -1,12 +1,47 @@
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   static bool _isInitialized = false;
+  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
     if (_isInitialized) return;
-    _isInitialized = true;
-    print('NotificationService: Initialized successfully');
+    
+    try {
+      // Initialize Android settings
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+
+      // Initialize iOS settings
+      const DarwinInitializationSettings initializationSettingsIOS =
+          DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+      // Initialize settings
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+      );
+
+      // Initialize the plugin
+      await _flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          print('NotificationService: Notification tapped: ${response.payload}');
+        },
+      );
+
+      _isInitialized = true;
+      print('NotificationService: Initialized successfully');
+    } catch (e) {
+      print('NotificationService: Error initializing: $e');
+    }
   }
 
   static Future<void> requestPermissions() async {
@@ -55,18 +90,75 @@ class NotificationService {
     String? payload,
     int id = 0,
   }) async {
-    print('NotificationService: Would show notification - $title: $body');
-    
-    // Check if we have permission before attempting to show notification
-    final hasPermission = await hasNotificationPermission();
-    if (!hasPermission) {
-      print('NotificationService: No notification permission, cannot show notification');
-      return;
+    try {
+      print('NotificationService: Showing notification - $title: $body');
+      
+      // Check if we have permission before attempting to show notification
+      final hasPermission = await hasNotificationPermission();
+      if (!hasPermission) {
+        print('NotificationService: No notification permission, cannot show notification');
+        return;
+      }
+
+      // Create Android notification details
+      final AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'therapair_channel',
+        'TheraPair Notifications',
+        channelDescription: 'Notifications for TheraPair app',
+        importance: Importance.max,
+        priority: Priority.high,
+        showWhen: true,
+        enableVibration: true,
+        enableLights: true,
+        playSound: true,
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        styleInformation: BigTextStyleInformation(body),
+      );
+
+      // Create iOS notification details
+      const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+          DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      // Create notification details
+      final NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics,
+      );
+
+      // Show the notification
+      await _flutterLocalNotificationsPlugin.show(
+        id,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
+
+      print('NotificationService: Notification displayed successfully: $title - $body');
+    } catch (e) {
+      print('NotificationService: Error showing notification: $e');
     }
+  }
+
+  // Test notification method to ensure permission is being used
+  static Future<void> testNotification() async {
+    print('NotificationService: Testing notification permission...');
     
-    // In a real app, this would show a local notification
-    // For now, we'll just log it
-    print('NotificationService: Notification would be displayed: $title - $body');
+    final hasPermission = await hasNotificationPermission();
+    print('NotificationService: Has permission: $hasPermission');
+    
+    if (hasPermission) {
+      await showNotification(
+        title: 'TheraPair Test',
+        body: 'This is a test notification to verify permissions',
+        id: 999,
+      );
+    }
   }
 
   // Therapist notifications
@@ -124,10 +216,20 @@ class NotificationService {
   }
 
   static Future<void> cancelAllNotifications() async {
-    print('NotificationService: All notifications cancelled');
+    try {
+      await _flutterLocalNotificationsPlugin.cancelAll();
+      print('NotificationService: All notifications cancelled');
+    } catch (e) {
+      print('NotificationService: Error cancelling all notifications: $e');
+    }
   }
 
   static Future<void> cancelNotification(int id) async {
-    print('NotificationService: Notification $id cancelled');
+    try {
+      await _flutterLocalNotificationsPlugin.cancel(id);
+      print('NotificationService: Notification $id cancelled');
+    } catch (e) {
+      print('NotificationService: Error cancelling notification $id: $e');
+    }
   }
 } 

@@ -815,10 +815,12 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
       booking['clientEmail'] == clientEmail
     ).toList();
     
-    // Sort bookings by date (newest first)
-    clientBookings.sort((a, b) => 
-      DateTime.parse(b['date']).compareTo(DateTime.parse(a['date']))
-    );
+    // Sort bookings by bookedAt timestamp (newest first)
+    clientBookings.sort((a, b) {
+      final timestampA = a['bookedAt'] ?? '';
+      final timestampB = b['bookedAt'] ?? '';
+      return timestampB.compareTo(timestampA); // Latest first
+    });
 
     showDialog(
       context: context,

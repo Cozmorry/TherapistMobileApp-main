@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
-import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/notification_service.dart';
+import 'package:therapair/services/auth_service.dart';
 
 class NotificationCenterPage extends StatefulWidget {
   const NotificationCenterPage({super.key});
@@ -36,6 +36,28 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
       setState(() {
         _hasNotificationPermission = newPermissionStatus;
       });
+    }
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      final now = DateTime.now();
+      final timestampDate = DateTime.parse(timestamp);
+      final difference = now.difference(timestampDate);
+
+      if (difference.inMinutes < 1) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+      } else {
+        return '${timestampDate.day}/${timestampDate.month}/${timestampDate.year}';
+      }
+    } catch (e) {
+      return 'Unknown time';
     }
   }
 
@@ -318,7 +340,7 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Just now', // You could format the actual timestamp here
+                    _formatTimestamp(timestamp),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],

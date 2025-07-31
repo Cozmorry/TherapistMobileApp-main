@@ -35,11 +35,11 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
           booking['therapistEmail'] == therapistEmail
         ).toList();
         
-        // Sort bookings by date (latest first)
+        // Sort bookings by bookedAt timestamp (latest first)
         therapistBookings.sort((a, b) {
-          final dateA = DateTime.parse(a['date']);
-          final dateB = DateTime.parse(b['date']);
-          return dateB.compareTo(dateA); // Latest first
+          final timestampA = a['bookedAt'] ?? '';
+          final timestampB = b['bookedAt'] ?? '';
+          return timestampB.compareTo(timestampA); // Latest first
         });
         
         setState(() {
@@ -60,6 +60,28 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
         _bookings = [];
         _isLoading = false;
       });
+    }
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      final now = DateTime.now();
+      final timestampDate = DateTime.parse(timestamp);
+      final difference = now.difference(timestampDate);
+
+      if (difference.inMinutes < 1) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+      } else {
+        return '${timestampDate.day}/${timestampDate.month}/${timestampDate.year}';
+      }
+    } catch (e) {
+      return 'Unknown time';
     }
   }
 
@@ -278,6 +300,15 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
                 _buildInfoItem(Icons.access_time, time),
                 const SizedBox(width: 16),
                 _buildInfoItem(Icons.timer, duration),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildInfoItem(
+                  Icons.schedule,
+                  'Booked ${_formatTimestamp(booking['bookedAt'])}',
+                ),
               ],
             ),
             if (booking['notes'] != null && booking['notes'].toString().isNotEmpty) ...[
