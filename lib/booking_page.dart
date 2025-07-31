@@ -498,7 +498,7 @@ class _BookingPageState extends State<BookingPage> {
         'therapistName': widget.therapist['name'],
         'therapistEmail': widget.therapist['email'],
         'clientId': LocalStorageService.getCurrentUser()?.uid,
-        'clientName': LocalStorageService.getUserDisplayName(),
+        'clientName': LocalStorageService.getCurrentUser()?.username ?? 'Unknown Client',
         'clientEmail': AuthService().currentUser?.email,
         'date': _selectedDate!.toIso8601String(),
         'time': _selectedTime,

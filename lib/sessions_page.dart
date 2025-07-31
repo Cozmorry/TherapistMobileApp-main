@@ -75,12 +75,16 @@ class _SessionsPageState extends State<SessionsPage> {
             )
           : _bookings.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _bookings.length,
-                  itemBuilder: (context, index) {
-                    return _buildSessionCard(_bookings[index]);
-                  },
+              : RefreshIndicator(
+                  onRefresh: _loadBookings,
+                  color: const Color(0xFFE91E63),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _bookings.length,
+                    itemBuilder: (context, index) {
+                      return _buildSessionCard(_bookings[index]);
+                    },
+                  ),
                 ),
     );
   }
@@ -163,6 +167,10 @@ class _SessionsPageState extends State<SessionsPage> {
       case 'cancelled':
         statusColor = Colors.red;
         statusText = 'Cancelled';
+        break;
+      case 'completed':
+        statusColor = Colors.blue;
+        statusText = 'Completed';
         break;
       default:
         statusColor = Colors.grey;

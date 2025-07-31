@@ -499,10 +499,13 @@ class LocalStorageService {
       final bookingIndex = allBookings.indexWhere((booking) => booking['bookedAt'] == bookingId);
       
       if (bookingIndex != -1) {
-        allBookings[bookingIndex]['status'] = newStatus;
+        // Preserve all existing booking data and only update the status
+        final updatedBooking = Map<String, dynamic>.from(allBookings[bookingIndex]);
+        updatedBooking['status'] = newStatus;
+        allBookings[bookingIndex] = updatedBooking;
         
         final bookingsJson = jsonEncode(allBookings);
-        print('LocalStorage: Updating booking status to $newStatus');
+        print('LocalStorage: Updating booking status to $newStatus for booking: ${updatedBooking['clientName']} with ${updatedBooking['therapistName']}');
         
         if (_useMemoryFallback) {
           _memoryStorage['all_bookings'] = bookingsJson;
@@ -511,6 +514,8 @@ class LocalStorageService {
           await _prefs?.setString('all_bookings', bookingsJson);
           print('LocalStorage: Booking status updated in SharedPreferences');
         }
+      } else {
+        print('LocalStorage: Booking not found for ID: $bookingId');
       }
     } catch (e) {
       print('LocalStorage: Error updating booking status: $e');

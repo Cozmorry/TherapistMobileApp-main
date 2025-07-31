@@ -78,7 +78,11 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
             )
           : _matchingTherapists.isEmpty
               ? _buildEmptyState()
-              : _buildResultsList(),
+              : RefreshIndicator(
+                  onRefresh: _findMatchingTherapists,
+                  color: const Color(0xFFE91E63),
+                  child: _buildResultsList(),
+                ),
     );
   }
 

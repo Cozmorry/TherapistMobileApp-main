@@ -81,12 +81,16 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
             )
           : _bookings.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _bookings.length,
-                  itemBuilder: (context, index) {
-                    return _buildSessionCard(_bookings[index]);
-                  },
+              : RefreshIndicator(
+                  onRefresh: _loadBookings,
+                  color: const Color(0xFFE91E63),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _bookings.length,
+                    itemBuilder: (context, index) {
+                      return _buildSessionCard(_bookings[index]);
+                    },
+                  ),
                 ),
     );
   }

@@ -103,12 +103,25 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              _loadSessionStats();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Session stats refreshed!'),
+                  backgroundColor: Color(0xFFE91E63),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Notifications coming soon!'),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Color(0xFFE91E63),
                 ),
               );
             },
@@ -158,131 +171,214 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   }
 
   Widget _buildHomeTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Welcome Section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE91E63),
-              borderRadius: BorderRadius.circular(15),
+    return RefreshIndicator(
+      onRefresh: () async {
+        _loadSessionStats();
+      },
+      color: const Color(0xFFE91E63),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Welcome Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE91E63),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome back, ${_userProfile['username']}!',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Ready to help your clients today?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 20.0),
+
+            // Stats Section
+            const Text(
+              'Today\'s Overview',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10.0),
+            Row(
               children: [
-                Text(
-                  'Welcome back, ${_userProfile['username']}!',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Expanded(
+                  child: _buildStatCard(
+                    'Pending Sessions',
+                    '$_pendingSessions',
+                    Icons.schedule,
+                    Colors.orange,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Ready to help your clients today?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildStatCard(
+                    'Confirmed Sessions',
+                    '$_confirmedSessions',
+                    Icons.check_circle,
+                    Colors.green,
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 20.0),
+            const SizedBox(height: 10.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    'Completed Sessions',
+                    '$_completedSessions',
+                    Icons.done_all,
+                    Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildStatCard(
+                    'Total Sessions',
+                    '${_pendingSessions + _confirmedSessions + _completedSessions}',
+                    Icons.analytics,
+                    const Color(0xFFE91E63),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20.0),
 
-          // Stats Section
-          const Text(
-            'Today\'s Overview',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10.0),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Pending Sessions',
-                  '$_pendingSessions',
-                  Icons.schedule,
-                  Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatCard(
-                  'Confirmed Sessions',
-                  '$_confirmedSessions',
-                  Icons.check_circle,
-                  Colors.green,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10.0),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Completed Sessions',
-                  '$_completedSessions',
-                  Icons.done_all,
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatCard(
-                  'Total Sessions',
-                  '${_pendingSessions + _confirmedSessions + _completedSessions}',
-                  Icons.analytics,
-                  const Color(0xFFE91E63),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20.0),
-
-          // Quick Actions Section
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10.0),
-          // Schedule Session Button
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SessionSchedulePage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE91E63),
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: const Text(
-              'Schedule Session',
+            // Quick Actions Section
+            const Text(
+              'Quick Actions',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10.0),
+            // Schedule Session Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SessionSchedulePage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE91E63),
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                'Schedule Session',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 30.0),
+            
+            // Additional content to make it scrollable
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Recent Activity',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Pull down to refresh your session statistics and get the latest updates.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20.0),
+            
+            // More content to ensure scrollability
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Quick Tips',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '• Pull down on this screen to refresh session data\n• Check your sessions tab for detailed booking information\n• Use the settings to manage your profile',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 100.0), // Extra space to ensure scrollability
+          ],
+        ),
       ),
     );
   }
@@ -327,6 +423,123 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   }
 
   Widget _buildClientsTab() {
+    return _ClientsTabContent();
+  }
+
+  Widget _buildSettingsTab() {
+    return const SettingsPage();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh stats when returning to home tab
+    if (_currentIndex == 0) {
+      _loadSessionStats();
+    }
+  }
+}
+
+class _ClientsTabContent extends StatefulWidget {
+  @override
+  State<_ClientsTabContent> createState() => _ClientsTabContentState();
+}
+
+class _ClientsTabContentState extends State<_ClientsTabContent> {
+  List<Map<String, dynamic>> _clients = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClients();
+  }
+
+  void _loadClients() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final currentUser = AuthService().currentUser;
+      if (currentUser != null) {
+        final therapistEmail = currentUser.email!;
+        final allBookings = LocalStorageService.getAllBookings();
+        
+        // Get unique clients who have booked with this therapist
+        final Map<String, Map<String, dynamic>> uniqueClients = {};
+        
+        for (final booking in allBookings) {
+          final bookingTherapistEmail = booking['therapistEmail'];
+          if (bookingTherapistEmail == therapistEmail) {
+            final clientEmail = booking['clientEmail'];
+            final clientName = booking['clientName'];
+            
+            if (clientEmail != null && !uniqueClients.containsKey(clientEmail)) {
+              uniqueClients[clientEmail] = {
+                'email': clientEmail,
+                'name': clientName ?? 'Unknown Client',
+                'totalBookings': 1,
+                'lastBooking': booking['bookedAt'],
+              };
+            } else if (clientEmail != null) {
+              // Increment booking count for existing client
+              uniqueClients[clientEmail]!['totalBookings'] = 
+                  (uniqueClients[clientEmail]!['totalBookings'] ?? 0) + 1;
+            }
+          }
+        }
+        
+        setState(() {
+          _clients = uniqueClients.values.toList();
+          _isLoading = false;
+        });
+        
+        print('ClientsTab: Loaded ${_clients.length} clients for therapist: $therapistEmail');
+      } else {
+        setState(() {
+          _clients = [];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading clients: $e');
+      setState(() {
+        _clients = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFCE4EC),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFE91E63),
+              ),
+            )
+          : _clients.isEmpty
+              ? _buildEmptyState()
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    _loadClients();
+                  },
+                  color: const Color(0xFFE91E63),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _clients.length,
+                    itemBuilder: (context, index) {
+                      return _buildClientCard(_clients[index]);
+                    },
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -355,7 +568,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Your clients will appear here once they book sessions.',
+            'Your clients will appear here once they book sessions with you.',
             style: TextStyle(
               fontSize: 16,
               color: Colors.black54,
@@ -367,17 +580,321 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
     );
   }
 
-  Widget _buildSettingsTab() {
-    return const SettingsPage();
+  Widget _buildClientCard(Map<String, dynamic> client) {
+    final clientName = client['name'] ?? 'Unknown Client';
+    final clientEmail = client['email'] ?? '';
+    final totalBookings = client['totalBookings'] ?? 0;
+    final lastBooking = client['lastBooking'] ?? '';
+
+    return GestureDetector(
+      onTap: () {
+        _showClientBookingsModal(client);
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: const Color(0xFFE91E63),
+                child: Text(
+                  clientName.substring(0, 1).toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      clientName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      clientEmail,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$totalBookings booking${totalBookings != 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey[400],
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh stats when returning to home tab
-    if (_currentIndex == 0) {
-      _loadSessionStats();
-    }
+  void _showClientBookingsModal(Map<String, dynamic> client) {
+    final clientName = client['name'] ?? 'Unknown Client';
+    final clientEmail = client['email'] ?? '';
+    
+    // Get all bookings for this specific client
+    final currentUser = AuthService().currentUser;
+    if (currentUser == null) return;
+    
+    final therapistEmail = currentUser.email!;
+    final allBookings = LocalStorageService.getAllBookings();
+    final clientBookings = allBookings.where((booking) => 
+      booking['therapistEmail'] == therapistEmail && 
+      booking['clientEmail'] == clientEmail
+    ).toList();
+    
+    // Sort bookings by date (newest first)
+    clientBookings.sort((a, b) => 
+      DateTime.parse(b['date']).compareTo(DateTime.parse(a['date']))
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE91E63),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          clientName.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            color: Color(0xFFE91E63),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              clientName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              clientEmail,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Bookings List
+                Flexible(
+                  child: clientBookings.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'No bookings found',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: clientBookings.length,
+                          itemBuilder: (context, index) {
+                            final booking = clientBookings[index];
+                            final date = DateTime.parse(booking['date']);
+                            final status = booking['status'] ?? 'pending';
+                            final sessionType = booking['sessionType'] ?? 'Individual Therapy';
+                            final time = booking['time'] ?? 'TBD';
+                            final duration = booking['duration'] ?? '60 minutes';
+                            
+                            Color statusColor;
+                            String statusText;
+                            
+                            switch (status) {
+                              case 'confirmed':
+                                statusColor = Colors.green;
+                                statusText = 'Confirmed';
+                                break;
+                              case 'pending':
+                                statusColor = Colors.orange;
+                                statusText = 'Pending';
+                                break;
+                              case 'cancelled':
+                                statusColor = Colors.red;
+                                statusText = 'Cancelled';
+                                break;
+                              case 'completed':
+                                statusColor = Colors.blue;
+                                statusText = 'Completed';
+                                break;
+                              default:
+                                statusColor = Colors.grey;
+                                statusText = 'Unknown';
+                            }
+                            
+                            return ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE91E63).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.calendar_today,
+                                  color: const Color(0xFFE91E63),
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                '${date.day}/${date.month}/${date.year} at $time',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(sessionType),
+                                  Text('Duration: $duration'),
+                                ],
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: statusColor),
+                                ),
+                                child: Text(
+                                  statusText,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: statusColor,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                
+                // Footer
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total: ${clientBookings.length} booking${clientBookings.length != 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(
+                            color: Color(0xFFE91E63),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
