@@ -4,7 +4,7 @@ import 'package:therapair/models/user_model.dart';
 
 class LocalStorageService {
   static SharedPreferences? _prefs;
-  static Map<String, dynamic> _memoryStorage = {};
+  static final Map<String, dynamic> _memoryStorage = {};
   static bool _useMemoryFallback = false;
 
   static Future<void> init() async {
@@ -519,6 +519,69 @@ class LocalStorageService {
       }
     } catch (e) {
       print('LocalStorage: Error updating booking status: $e');
+    }
+  }
+
+  // Feedback methods
+  static Future<void> saveFeedback(Map<String, dynamic> feedbackData) async {
+    try {
+      final allFeedback = getAllFeedback();
+      allFeedback.add(feedbackData);
+      
+      final feedbackJson = jsonEncode(allFeedback);
+      print('LocalStorage: Saving feedback for therapist: ${feedbackData['therapistEmail']}');
+      
+      if (_useMemoryFallback) {
+        _memoryStorage['all_feedback'] = feedbackJson;
+        print('LocalStorage: Feedback saved to memory');
+      } else {
+        await _prefs?.setString('all_feedback', feedbackJson);
+        print('LocalStorage: Feedback saved to SharedPreferences');
+      }
+    } catch (e) {
+      print('LocalStorage: Error saving feedback: $e');
+    }
+  }
+
+  static List<Map<String, dynamic>> getAllFeedback() {
+    try {
+      String? feedbackJson;
+      
+      if (_useMemoryFallback) {
+        feedbackJson = _memoryStorage['all_feedback'];
+        print('LocalStorage: Getting all feedback from memory: $feedbackJson');
+      } else {
+        feedbackJson = _prefs?.getString('all_feedback');
+        print('LocalStorage: Getting all feedback from SharedPreferences: $feedbackJson');
+      }
+      
+      if (feedbackJson != null && feedbackJson.isNotEmpty) {
+        final List<dynamic> feedbackList = jsonDecode(feedbackJson);
+        final List<Map<String, dynamic>> feedback = feedbackList.map((item) => Map<String, dynamic>.from(item)).toList();
+        print('LocalStorage: Retrieved ${feedback.length} feedback entries');
+        return feedback;
+      }
+      
+      print('LocalStorage: No feedback found, returning empty list');
+      return [];
+    } catch (e) {
+      print('LocalStorage: Error getting all feedback: $e');
+      return [];
+    }
+  }
+
+  static List<Map<String, dynamic>> getTherapistFeedback(String therapistEmail) {
+    try {
+      final allFeedback = getAllFeedback();
+      final therapistFeedback = allFeedback.where((feedback) => 
+        feedback['therapistEmail'] == therapistEmail
+      ).toList();
+      
+      print('LocalStorage: Found ${therapistFeedback.length} feedback entries for therapist: $therapistEmail');
+      return therapistFeedback;
+    } catch (e) {
+      print('LocalStorage: Error getting therapist feedback: $e');
+      return [];
     }
   }
 

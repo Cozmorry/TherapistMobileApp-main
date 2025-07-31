@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:therapair/widgets/main_layout.dart';
 import 'package:therapair/sessions_page.dart';
 import 'package:therapair/resources_page.dart';
 import 'package:therapair/settings_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/therapist_search_results_page.dart';
+import 'package:therapair/notification_center_page.dart'; // Added import for NotificationCenterPage
 import 'dart:io';
 
 class HomePage extends StatefulWidget {
@@ -102,12 +102,12 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications coming soon!'),
-                  backgroundColor: Color(0xFFE91E63),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationCenterPage(),
                 ),
               );
             },

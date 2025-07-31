@@ -463,10 +463,10 @@ class _LoginPageState extends State<LoginPage> {
         // Google Sign-In failed or was cancelled
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Google Sign-in is not available. Please use email/password.'),
+            const SnackBar(
+              content: Text('Google Sign-in is not available. Please use email/password.'),
               backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 4),
+              duration: Duration(seconds: 4),
             ),
           );
         }

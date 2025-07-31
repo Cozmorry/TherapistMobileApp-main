@@ -84,8 +84,8 @@ class ArticleDetailPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8.0),
-              Column(
-                children: const <Widget>[
+              const Column(
+                children: <Widget>[
                   BenefitItem(text: 'Stress Reduction'),
                   BenefitItem(text: 'Improved Focus'),
                   BenefitItem(text: 'Emotional Regulation'),
@@ -103,8 +103,8 @@ class ArticleDetailPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8.0),
-              Column(
-                children: const <Widget>[
+              const Column(
+                children: <Widget>[
                   ExerciseItem(
                     text: 'Mindful Breathing Focus on your breath, noticing the sensation of each inhale and exhale.',
                     icon: Icons.timer,
@@ -145,8 +145,8 @@ class ArticleDetailPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8.0),
-              Column(
-                children: const <Widget>[
+              const Column(
+                children: <Widget>[
                   RelatedResourceItem(
                     text: 'Anxiety Management Strategies Techniques for managing anxiety and promoting relaxation.',
                     icon: Icons.article,

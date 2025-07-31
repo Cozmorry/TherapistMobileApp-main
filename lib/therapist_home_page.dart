@@ -4,6 +4,8 @@ import 'package:therapair/settings_page.dart';
 import 'package:therapair/therapist_sessions_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/therapist_feedback_page.dart'; // Added import for TherapistFeedbackPage
+import 'package:therapair/notification_center_page.dart'; // Added import for NotificationCenterPage
 
 class TherapistHomePage extends StatefulWidget {
   const TherapistHomePage({super.key});
@@ -116,12 +118,12 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_none),
+            icon: const Icon(Icons.notifications),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications coming soon!'),
-                  backgroundColor: Color(0xFFE91E63),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationCenterPage(),
                 ),
               );
             },
@@ -273,32 +275,44 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 10.0),
-            // Schedule Session Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SessionSchedulePage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE91E63),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    'View Sessions',
+                    'Manage your sessions',
+                    Icons.calendar_today,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TherapistSessionsPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Schedule Session',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    'Client Feedback',
+                    'See what clients are saying',
+                    Icons.rate_review,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TherapistFeedbackPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ),
             const SizedBox(height: 30.0),
             
@@ -317,18 +331,18 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Recent Activity',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
+                  SizedBox(height: 12),
+                  Text(
                     'Pull down to refresh your session statistics and get the latest updates.',
                     style: TextStyle(
                       fontSize: 14,
@@ -340,8 +354,18 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
             ),
             const SizedBox(height: 20.0),
             
-            // More content to ensure scrollability
+            // Quick Tips Section
+            const Text(
+              'Quick Tips',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -355,18 +379,18 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Quick Tips',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
+                  SizedBox(height: 12),
+                  Text(
                     '• Pull down on this screen to refresh session data\n• Check your sessions tab for detailed booking information\n• Use the settings to manage your profile',
                     style: TextStyle(
                       fontSize: 14,
@@ -413,6 +437,44 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onPressed) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: const Color(0xFFE91E63), size: 30),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -813,9 +875,9 @@ class _ClientsTabContentState extends State<_ClientsTabContent> {
                                   color: const Color(0xFFE91E63).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.calendar_today,
-                                  color: const Color(0xFFE91E63),
+                                  color: Color(0xFFE91E63),
                                   size: 20,
                                 ),
                               ),

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:therapair/feedback_page.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/login_page.dart'; // Added import for LoginPage
 import 'package:therapair/models/user_model.dart'; // Added import for UserModel
+import 'package:therapair/therapist_feedback_page.dart'; // Added import for TherapistFeedbackPage
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -52,6 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _userProfile = {
         'username': userData?.getDisplayName() ?? userEmail.split('@')[0],
         'email': userEmail,
+        'role': userData?.role, // Assuming role is stored in userData
       };
       _onboardingData = userData?.onboardingData;
     });
@@ -498,6 +499,44 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 20),
+            
+            // Feedback Section (for therapists only)
+            if (_userProfile['role'] == 'therapist') ...[
+              const Text(
+                'Professional',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSettingsCard(
+                'View Client Feedback',
+                'See what your clients are saying about you',
+                Icons.rate_review,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TherapistFeedbackPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+            
+            // Account Section
+            const Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // Settings Options
             Container(
@@ -515,51 +554,29 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               child: Column(
                 children: [
-                  SettingsButton(
-                    text: 'Edit Profile',
-                    icon: Icons.person,
-                    onPressed: _showEditProfile,
-                  ),
-                  SettingsButton(
-                    text: 'Notifications',
-                    icon: Icons.notifications,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Notifications settings coming soon!'),
-                          backgroundColor: Colors.blue,
-                        ),
-                      );
+                  _buildSettingsCard(
+                    'Edit Profile',
+                    'Update your profile information',
+                    Icons.person,
+                    () {
+                      _showEditProfileDialog();
                     },
                   ),
-                  SettingsButton(
-                    text: 'Privacy & Security',
-                    icon: Icons.security,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Privacy settings coming soon!'),
-                          backgroundColor: Colors.blue,
-                        ),
-                      );
+                  const SizedBox(height: 12),
+                  _buildSettingsCard(
+                    'Help & Support',
+                    'Contact support@therapair.app for assistance',
+                    Icons.help,
+                    () {
+                      _showHelpSupportDialog();
                     },
                   ),
-                  SettingsButton(
-                    text: 'Help & Support',
-                    icon: Icons.help,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FeedbackPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  SettingsButton(
-                    text: 'Log Out',
-                    icon: Icons.logout,
-                    onPressed: _signOut,
+                  const SizedBox(height: 12),
+                  _buildSettingsCard(
+                    'Log Out',
+                    'Sign out of your account',
+                    Icons.logout,
+                    _signOut,
                   ),
                 ],
               ),
@@ -668,6 +685,258 @@ class _SettingsPageState extends State<SettingsPage> {
       const SnackBar(
         content: Text('Edit profile feature coming soon!'),
         backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  void _showEditProfileDialog() {
+    final usernameController = TextEditingController(text: _userProfile['username']);
+    final emailController = TextEditingController(text: _userProfile['email']);
+    final nameController = TextEditingController(text: _onboardingData?['name']);
+    final ageController = TextEditingController(text: _onboardingData?['age']?.toString());
+    final genderController = TextEditingController(text: _onboardingData?['gender']);
+    final phoneController = TextEditingController(text: _onboardingData?['phone']);
+    final therapyTypeController = TextEditingController(text: _onboardingData?['therapyType']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Profile'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    hintText: 'Enter your new username',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'Enter your new email',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'Enter your name',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: ageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Age',
+                    hintText: 'Enter your age',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: genderController,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                    hintText: 'Enter your gender',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    hintText: 'Enter your phone number',
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: therapyTypeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Therapy Type',
+                    hintText: 'Enter your therapy type',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await _saveProfileChanges(
+                  usernameController.text,
+                  emailController.text,
+                  nameController.text,
+                  ageController.text,
+                  genderController.text,
+                  phoneController.text,
+                  therapyTypeController.text,
+                );
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE91E63),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save Changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _saveProfileChanges(
+    String username,
+    String email,
+    String name,
+    String age,
+    String gender,
+    String phone,
+    String therapyType,
+  ) async {
+    try {
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final userEmail = currentUser.email!;
+      var userData = LocalStorageService.getUserDataByEmail(userEmail);
+      
+      if (userData == null) {
+        userData = UserModel.fromFirebaseUser(currentUser);
+      }
+
+      // Update user profile
+      userData.username = username.isNotEmpty ? username : userData.username;
+      userData.email = email.isNotEmpty ? email : userData.email;
+
+      // Update onboarding data
+      if (userData.onboardingData == null) {
+        userData.onboardingData = {};
+      }
+
+      if (name.isNotEmpty) userData.onboardingData!['name'] = name;
+      if (age.isNotEmpty) userData.onboardingData!['age'] = int.tryParse(age) ?? userData.onboardingData!['age'];
+      if (gender.isNotEmpty) userData.onboardingData!['gender'] = gender;
+      if (phone.isNotEmpty) userData.onboardingData!['phone'] = phone;
+      if (therapyType.isNotEmpty) userData.onboardingData!['therapyType'] = therapyType;
+
+      // Save updated user data
+      await LocalStorageService.saveUserDataByEmail(userEmail, userData);
+      await LocalStorageService.saveCurrentUser(userData);
+
+      // Update local state
+      setState(() {
+        _userProfile = {
+          'username': userData?.getDisplayName() ?? username,
+          'email': userData?.email ?? userEmail,
+          'role': userData?.role,
+        };
+        _onboardingData = userData?.onboardingData;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error saving profile changes: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showHelpSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Help & Support'),
+          content: const Text(
+            'If you need assistance, please contact support@therapair.app. We are here to help you!',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsCard(String title, String subtitle, IconData icon, VoidCallback onPressed) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: const Color(0xFFE91E63),
+                size: 30,
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

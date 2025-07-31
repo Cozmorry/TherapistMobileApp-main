@@ -4,6 +4,7 @@ import 'package:therapair/login_page.dart';
 import 'package:therapair/widgets/main_layout.dart';
 import 'package:therapair/services/auth_service.dart';
 import 'package:therapair/services/local_storage_service.dart';
+import 'package:therapair/services/notification_service.dart';
 import 'package:therapair/role_selection_page.dart';
 import 'package:therapair/client_onboarding_page.dart';
 import 'package:therapair/therapist_home_page.dart';
@@ -16,21 +17,15 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  try {
-    await Firebase.initializeApp();
-    print('Main: Firebase initialized successfully');
-    
-    await LocalStorageService.init();
-    await LocalStorageService.testStorage(); // Test storage functionality
-    
-    // Test Firebase connection
-    final authService = AuthService();
-    final firebaseConnected = await authService.testFirebaseConnection();
-    print('Main: Firebase connection test result: $firebaseConnected');
-    
-  } catch (e) {
-    print('Initialization error: $e');
-  }
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
+  // Initialize Local Storage
+  await LocalStorageService.init();
+  
+  // Initialize Notification Service
+  await NotificationService.initialize();
+  await NotificationService.requestPermissions();
   
   runApp(const MyApp());
 }

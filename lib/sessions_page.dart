@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/feedback_page.dart'; // Added import for FeedbackPage
 
 class SessionsPage extends StatefulWidget {
   const SessionsPage({super.key});
@@ -25,22 +26,32 @@ class _SessionsPageState extends State<SessionsPage> {
     });
 
     try {
-      // Get current user from Firebase
       final currentUser = AuthService().currentUser;
       if (currentUser != null) {
-        final userEmail = currentUser.email!;
-        final bookings = LocalStorageService.getClientBookings(userEmail);
+        final clientEmail = currentUser.email!;
+        final allBookings = LocalStorageService.getAllBookings();
+        final clientBookings = allBookings.where((booking) => 
+          booking['clientEmail'] == clientEmail
+        ).toList();
+        
+        // Sort bookings by date (latest first)
+        clientBookings.sort((a, b) {
+          final dateA = DateTime.parse(a['date']);
+          final dateB = DateTime.parse(b['date']);
+          return dateB.compareTo(dateA); // Latest first
+        });
+        
         setState(() {
-          _bookings = bookings;
+          _bookings = clientBookings;
           _isLoading = false;
         });
-        print('SessionsPage: Loaded ${bookings.length} bookings for $userEmail');
+        
+        print('SessionsPage: Loaded ${clientBookings.length} bookings for client: $clientEmail');
       } else {
         setState(() {
           _bookings = [];
           _isLoading = false;
         });
-        print('SessionsPage: No current user found');
       }
     } catch (e) {
       print('Error loading bookings: $e');
@@ -303,16 +314,32 @@ class _SessionsPageState extends State<SessionsPage> {
                       child: const Text('Cancel'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                ] else if (status == 'completed') ...[
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _provideFeedback(booking);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE91E63),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text('Provide Feedback'),
+                    ),
+                  ),
                 ],
+                const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: OutlinedButton(
                     onPressed: () {
-                      _viewSessionDetails(booking);
+                      _showSessionDetails(booking);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE91E63),
-                      foregroundColor: Colors.white,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFE91E63),
+                      side: const BorderSide(color: Color(0xFFE91E63)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -378,7 +405,23 @@ class _SessionsPageState extends State<SessionsPage> {
     );
   }
 
-  void _viewSessionDetails(Map<String, dynamic> booking) {
+  void _provideFeedback(Map<String, dynamic> booking) {
+    // Create therapist data from booking
+    final therapistData = {
+      'name': booking['therapistName'] ?? 'Unknown Therapist',
+      'email': booking['therapistEmail'] ?? '',
+      'specialization': 'Therapist', // Default value
+    };
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FeedbackPage(therapist: therapistData),
+      ),
+    );
+  }
+
+  void _showSessionDetails(Map<String, dynamic> booking) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

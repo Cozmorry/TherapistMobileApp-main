@@ -21,9 +21,9 @@ class BookingRequestsPage extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: [
+        children: const [
           // TODO: Load booking requests from backend
-          const Center(
+          Center(
             child: Text(
               'No booking requests',
               style: TextStyle(

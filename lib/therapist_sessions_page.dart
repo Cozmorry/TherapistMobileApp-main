@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/services/notification_service.dart';
 
 class TherapistSessionsPage extends StatefulWidget {
   const TherapistSessionsPage({super.key});
@@ -19,37 +20,41 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
     _loadBookings();
   }
 
-  Future<void> _loadBookings() async {
+  void _loadBookings() {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Get current user from Firebase
       final currentUser = AuthService().currentUser;
       if (currentUser != null) {
-        final userEmail = currentUser.email!;
-        print('TherapistSessionsPage: Loading bookings for therapist: $userEmail');
+        final therapistEmail = currentUser.email!;
+        final allBookings = LocalStorageService.getAllBookings();
+        final therapistBookings = allBookings.where((booking) => 
+          booking['therapistEmail'] == therapistEmail
+        ).toList();
         
-        // Debug: Print all therapists and bookings
-        LocalStorageService.debugPrintAllTherapists();
-        LocalStorageService.debugPrintAllBookings();
+        // Sort bookings by date (latest first)
+        therapistBookings.sort((a, b) {
+          final dateA = DateTime.parse(a['date']);
+          final dateB = DateTime.parse(b['date']);
+          return dateB.compareTo(dateA); // Latest first
+        });
         
-        final bookings = LocalStorageService.getTherapistBookings(userEmail);
         setState(() {
-          _bookings = bookings;
+          _bookings = therapistBookings;
           _isLoading = false;
         });
-        print('TherapistSessionsPage: Loaded ${bookings.length} bookings for $userEmail');
+        
+        print('TherapistSessionsPage: Loaded ${therapistBookings.length} bookings for therapist: $therapistEmail');
       } else {
         setState(() {
           _bookings = [];
           _isLoading = false;
         });
-        print('TherapistSessionsPage: No current user found');
       }
     } catch (e) {
-      print('Error loading therapist bookings: $e');
+      print('Error loading bookings: $e');
       setState(() {
         _bookings = [];
         _isLoading = false;
@@ -82,7 +87,9 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
           : _bookings.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
-                  onRefresh: _loadBookings,
+                  onRefresh: () async {
+                    _loadBookings();
+                  },
                   color: const Color(0xFFE91E63),
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -374,103 +381,100 @@ class _TherapistSessionsPageState extends State<TherapistSessionsPage> {
     );
   }
 
-  void _confirmSession(Map<String, dynamic> booking) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Session'),
-          content: Text('Confirm session with ${booking['clientName']}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await LocalStorageService.updateBookingStatus(
-                  booking['bookedAt'],
-                  'confirmed',
-                );
-                _loadBookings();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Confirm'),
-            ),
-          ],
+  Future<void> _confirmSession(Map<String, dynamic> booking) async {
+    try {
+      await LocalStorageService.updateBookingStatus(booking['bookedAt'], 'confirmed');
+      
+      // Send notification to client
+      await NotificationService.notifyClientBookingAccepted(
+        therapistName: booking['therapistName'],
+        sessionType: booking['sessionType'],
+        date: booking['date'],
+      );
+      
+      _loadBookings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session confirmed!'),
+            backgroundColor: Colors.green,
+          ),
         );
-      },
-    );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error confirming session: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  void _declineSession(Map<String, dynamic> booking) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Decline Session'),
-          content: Text('Decline session with ${booking['clientName']}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await LocalStorageService.updateBookingStatus(
-                  booking['bookedAt'],
-                  'cancelled',
-                );
-                _loadBookings();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Decline'),
-            ),
-          ],
+  Future<void> _declineSession(Map<String, dynamic> booking) async {
+    try {
+      await LocalStorageService.updateBookingStatus(booking['bookedAt'], 'cancelled');
+      
+      // Send notification to client
+      await NotificationService.notifyClientBookingDeclined(
+        therapistName: booking['therapistName'],
+        sessionType: booking['sessionType'],
+        date: booking['date'],
+      );
+      
+      _loadBookings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session declined!'),
+            backgroundColor: Colors.orange,
+          ),
         );
-      },
-    );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error declining session: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  void _completeSession(Map<String, dynamic> booking) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Complete Session'),
-          content: Text('Mark session with ${booking['clientName']} as completed?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await LocalStorageService.updateBookingStatus(
-                  booking['bookedAt'],
-                  'completed',
-                );
-                _loadBookings();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Complete'),
-            ),
-          ],
+  Future<void> _completeSession(Map<String, dynamic> booking) async {
+    try {
+      await LocalStorageService.updateBookingStatus(booking['bookedAt'], 'completed');
+      
+      // Send notification to client
+      await NotificationService.notifyClientSessionCompleted(
+        therapistName: booking['therapistName'],
+        sessionType: booking['sessionType'],
+        date: booking['date'],
+      );
+      
+      _loadBookings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session marked as completed!'),
+            backgroundColor: Colors.blue,
+          ),
         );
-      },
-    );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error completing session: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _viewSessionDetails(Map<String, dynamic> booking) {

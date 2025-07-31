@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/services/notification_service.dart';
 
 class BookingPage extends StatefulWidget {
   final Map<String, dynamic> therapist;
@@ -511,42 +512,22 @@ class _BookingPageState extends State<BookingPage> {
 
       // Save booking to local storage
       await LocalStorageService.saveBooking(bookingData);
-
+      
+      // Send notification to therapist
+      await NotificationService.notifyTherapistNewBooking(
+        clientName: bookingData['clientName'],
+        sessionType: bookingData['sessionType'],
+        date: bookingData['date'],
+      );
+      
       if (mounted) {
-        // Show success dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Booking Successful!'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Session with ${widget.therapist['name']}'),
-                  const SizedBox(height: 8),
-                  Text('Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
-                  Text('Time: $_selectedTime'),
-                  Text('Duration: $_selectedDuration'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Your booking has been confirmed. You will receive a notification when the therapist responds.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-                    Navigator.pop(context); // Go back to previous page
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session booked successfully!'),
+            backgroundColor: Color(0xFFE91E63),
+          ),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

@@ -39,16 +39,16 @@ dependencies:
   cupertino_icons: ^1.0.2
   
   # Firebase dependencies
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.16.0
-  google_sign_in: ^6.3.0
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  google_sign_in: ^6.1.6
 
   # Local storage
   shared_preferences: ^2.2.2
 
   # Image picker for profile pictures
   image_picker: ^1.0.4
-  permission_handler: ^11.3.1
+  permission_handler: ^11.1.0
 
 dev_dependencies:
   flutter_test:

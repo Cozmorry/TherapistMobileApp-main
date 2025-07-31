@@ -387,7 +387,7 @@ class _TherapistSearchResultsPageState extends State<TherapistSearchResultsPage>
 
   Color _parseColor(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF${hexColor}', radix: 16));
+    return Color(int.parse('FF$hexColor', radix: 16));
   }
 
   void _showTherapistDetails(Map<String, dynamic> therapist, double matchPercentage) {
