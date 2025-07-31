@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/services/notification_service.dart';
 
 class NotificationCenterPage extends StatefulWidget {
   const NotificationCenterPage({super.key});
@@ -12,11 +13,30 @@ class NotificationCenterPage extends StatefulWidget {
 class _NotificationCenterPageState extends State<NotificationCenterPage> {
   List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
+  bool _hasNotificationPermission = false;
 
   @override
   void initState() {
     super.initState();
+    _checkNotificationPermission();
     _loadNotifications();
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final hasPermission = await NotificationService.hasNotificationPermission();
+    setState(() {
+      _hasNotificationPermission = hasPermission;
+    });
+    
+    if (!hasPermission) {
+      // Request permission if not granted
+      await NotificationService.requestPermissions();
+      // Check again after request
+      final newPermissionStatus = await NotificationService.hasNotificationPermission();
+      setState(() {
+        _hasNotificationPermission = newPermissionStatus;
+      });
+    }
   }
 
   void _loadNotifications() {
@@ -121,6 +141,34 @@ class _NotificationCenterPageState extends State<NotificationCenterPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Permission status indicator
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _hasNotificationPermission ? Colors.green : Colors.orange,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _hasNotificationPermission ? Icons.notifications_active : Icons.notifications_off,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _hasNotificationPermission ? 'Enabled' : 'Disabled',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadNotifications,

@@ -30,6 +30,34 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _loadUserProfile();
+    _requestInitialPermissions();
+  }
+
+  Future<void> _requestInitialPermissions() async {
+    // Request permissions early so users are prompted when they first visit settings
+    try {
+      print('Settings: Requesting initial permissions...');
+      
+      // Check camera permission
+      final cameraStatus = await Permission.camera.status;
+      if (cameraStatus.isDenied) {
+        print('Settings: Requesting camera permission on page load');
+        await Permission.camera.request();
+      }
+      
+      // Check storage/photos permissions
+      final storageStatus = await Permission.storage.status;
+      final photosStatus = await Permission.photos.status;
+      if (storageStatus.isDenied && photosStatus.isDenied) {
+        print('Settings: Requesting storage/photos permissions on page load');
+        await Permission.storage.request();
+        await Permission.photos.request();
+      }
+      
+      print('Settings: Initial permission requests completed');
+    } catch (e) {
+      print('Settings: Error requesting initial permissions: $e');
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -82,33 +110,67 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<bool> _requestPermissions(ImageSource source) async {
     try {
+      print('Settings: Requesting permissions for source: $source');
+      
       if (source == ImageSource.camera) {
+        // Check current camera permission status
+        final cameraStatus = await Permission.camera.status;
+        print('Settings: Current camera permission status: $cameraStatus');
+        
+        if (cameraStatus.isGranted) {
+          print('Settings: Camera permission already granted');
+          return true;
+        }
+        
         // Request camera permission
-        final cameraStatus = await Permission.camera.request();
-        if (cameraStatus.isDenied) {
+        final cameraResult = await Permission.camera.request();
+        print('Settings: Camera permission request result: $cameraResult');
+        
+        if (cameraResult.isDenied) {
+          print('Settings: Camera permission denied');
           _showPermissionDialog('Camera', 'camera');
           return false;
         }
-        if (cameraStatus.isPermanentlyDenied) {
+        if (cameraResult.isPermanentlyDenied) {
+          print('Settings: Camera permission permanently denied');
           _showPermissionDialog('Camera', 'camera', isPermanent: true);
           return false;
         }
-        return cameraStatus.isGranted;
+        return cameraResult.isGranted;
       } else {
-        // Request storage permission for gallery
-        final storageStatus = await Permission.storage.request();
-        if (storageStatus.isDenied) {
+        // For gallery access, we need to check both storage and photos permissions
+        final storageStatus = await Permission.storage.status;
+        final photosStatus = await Permission.photos.status;
+        print('Settings: Current storage permission status: $storageStatus');
+        print('Settings: Current photos permission status: $photosStatus');
+        
+        if (storageStatus.isGranted || photosStatus.isGranted) {
+          print('Settings: Storage/photos permission already granted');
+          return true;
+        }
+        
+        // Request storage permission (for older Android versions)
+        final storageResult = await Permission.storage.request();
+        print('Settings: Storage permission request result: $storageResult');
+        
+        // Request photos permission (for Android 13+)
+        final photosResult = await Permission.photos.request();
+        print('Settings: Photos permission request result: $photosResult');
+        
+        if (storageResult.isDenied && photosResult.isDenied) {
+          print('Settings: Both storage and photos permissions denied');
           _showPermissionDialog('Storage', 'storage');
           return false;
         }
-        if (storageStatus.isPermanentlyDenied) {
+        if (storageResult.isPermanentlyDenied && photosResult.isPermanentlyDenied) {
+          print('Settings: Both storage and photos permissions permanently denied');
           _showPermissionDialog('Storage', 'storage', isPermanent: true);
           return false;
         }
-        return storageStatus.isGranted;
+        return storageResult.isGranted || photosResult.isGranted;
       }
     } catch (e) {
-      print('Permission request error: $e');
+      print('Settings: Permission request error: $e');
       return false;
     }
   }

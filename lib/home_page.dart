@@ -4,6 +4,7 @@ import 'package:therapair/resources_page.dart';
 import 'package:therapair/settings_page.dart';
 import 'package:therapair/services/local_storage_service.dart';
 import 'package:therapair/services/auth_service.dart';
+import 'package:therapair/services/notification_service.dart';
 import 'package:therapair/therapist_search_results_page.dart';
 import 'package:therapair/notification_center_page.dart'; // Added import for NotificationCenterPage
 import 'dart:io';
@@ -103,13 +104,40 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationCenterPage(),
-                ),
-              );
+            onPressed: () async {
+              // Check notification permission first
+              final hasPermission = await NotificationService.hasNotificationPermission();
+              
+              if (!hasPermission) {
+                // Request permission if not granted
+                await NotificationService.requestPermissions();
+                
+                // Check again after request
+                final newPermissionStatus = await NotificationService.hasNotificationPermission();
+                
+                if (!newPermissionStatus) {
+                  // Show a message if permission is still not granted
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Notification permission is required to receive updates'),
+                        backgroundColor: Colors.orange,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+              }
+              
+              // Navigate to notification center regardless of permission status
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationCenterPage(),
+                  ),
+                );
+              }
             },
           ),
         ],

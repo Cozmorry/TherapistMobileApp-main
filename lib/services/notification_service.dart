@@ -1,3 +1,4 @@
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static bool _isInitialized = false;
@@ -5,12 +6,47 @@ class NotificationService {
   static Future<void> initialize() async {
     if (_isInitialized) return;
     _isInitialized = true;
-    print('NotificationService: Initialized successfully (simplified version)');
+    print('NotificationService: Initialized successfully');
   }
 
   static Future<void> requestPermissions() async {
-    // Simplified - no actual permission request needed for this version
-    print('NotificationService: Permissions requested (simplified)');
+    try {
+      print('NotificationService: Requesting notification permissions...');
+      
+      // Check current notification permission status
+      final notificationStatus = await Permission.notification.status;
+      print('NotificationService: Current notification permission status: $notificationStatus');
+      
+      if (notificationStatus.isGranted) {
+        print('NotificationService: Notification permission already granted');
+        return;
+      }
+      
+      // Request notification permission
+      final notificationResult = await Permission.notification.request();
+      print('NotificationService: Notification permission request result: $notificationResult');
+      
+      if (notificationResult.isDenied) {
+        print('NotificationService: Notification permission denied');
+      } else if (notificationResult.isPermanentlyDenied) {
+        print('NotificationService: Notification permission permanently denied');
+      } else if (notificationResult.isGranted) {
+        print('NotificationService: Notification permission granted');
+      }
+      
+    } catch (e) {
+      print('NotificationService: Error requesting notification permissions: $e');
+    }
+  }
+
+  static Future<bool> hasNotificationPermission() async {
+    try {
+      final status = await Permission.notification.status;
+      return status.isGranted;
+    } catch (e) {
+      print('NotificationService: Error checking notification permission: $e');
+      return false;
+    }
   }
 
   static Future<void> showNotification({
@@ -20,8 +56,17 @@ class NotificationService {
     int id = 0,
   }) async {
     print('NotificationService: Would show notification - $title: $body');
+    
+    // Check if we have permission before attempting to show notification
+    final hasPermission = await hasNotificationPermission();
+    if (!hasPermission) {
+      print('NotificationService: No notification permission, cannot show notification');
+      return;
+    }
+    
     // In a real app, this would show a local notification
     // For now, we'll just log it
+    print('NotificationService: Notification would be displayed: $title - $body');
   }
 
   // Therapist notifications
